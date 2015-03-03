@@ -16,6 +16,7 @@ namespace Zyberspace\Telegram\Cli;
  */
 abstract class AbstractClientCommands
 {
+
     /**
      * Sets status as online.
      *
@@ -45,7 +46,7 @@ abstract class AbstractClientCommands
      *
      * @param string $peer The peer, gets escaped with escapePeer(),
      *                     so you can directly use the values from getContactList()
-     * @param string $msg The message to send, gets escaped with escapeStringArgument()
+     * @param string $msg  The message to send, gets escaped with escapeStringArgument()
      *
      * @return boolean true on success, false otherwise
      *
@@ -56,7 +57,8 @@ abstract class AbstractClientCommands
     public function msg($peer, $msg)
     {
         $peer = $this->escapePeer($peer);
-        $msg = $this->escapeStringArgument($msg);
+        $msg  = $this->escapeStringArgument($msg);
+
         return $this->exec('msg ' . $peer . ' ' . $msg);
     }
 
@@ -85,6 +87,7 @@ abstract class AbstractClientCommands
 
         //Clean up if media file came from REMOTE address
         $this->cleanUpMedia($processedMedia);
+
         return $result;
     }
 
@@ -113,6 +116,7 @@ abstract class AbstractClientCommands
 
         //Clean up if media file came from REMOTE address
         $this->cleanUpMedia($processedMedia);
+
         return $result;
     }
 
@@ -122,8 +126,8 @@ abstract class AbstractClientCommands
      *
      * @param int|string $phoneNumber The phone-number of the new contact, needs to be a telegram-user.
      *                                Can start with or without '+'.
-     * @param string $firstName The first name of the new contact
-     * @param string $lastName The last name of the new contact
+     * @param string     $firstName   The first name of the new contact
+     * @param string     $lastName    The last name of the new contact
      *
      * @return string|boolean The new contact "$firstName $lastName"; false if somethings goes wrong
      *
@@ -144,10 +148,10 @@ abstract class AbstractClientCommands
     /**
      * Renames a user in the contact list
      *
-     * @param string $contact The contact, gets escaped with escapePeer(),
-     *                        so you can directly use the values from getContactList()
+     * @param string $contact   The contact, gets escaped with escapePeer(),
+     *                          so you can directly use the values from getContactList()
      * @param string $firstName The new first name for the contact
-     * @param string $lastName The new last name for the contact
+     * @param string $lastName  The new last name for the contact
      *
      * @return string|boolean The renamed contact "$firstName $lastName"; false if somethings goes wrong
      *
@@ -238,18 +242,18 @@ abstract class AbstractClientCommands
      * Executes the history-command and returns it answer (the answer is unformated right now).
      * Will get better formated in the future.
      *
-     * @param string $peer The peer, gets escaped with escapePeer(),
-     *                     so you can directly use the values from getContactList()
-     * @param int $limit (optional) Limit answer to $limit messages. If not set, there is no limit.
-     * @param int $offset (optional) Use this with the $limit parameter to go through older messages.
-     *                    Can also be negative.
+     * @param string $peer   The peer, gets escaped with escapePeer(),
+     *                       so you can directly use the values from getContactList()
+     * @param int    $limit  (optional) Limit answer to $limit messages. If not set, there is no limit.
+     * @param int    $offset (optional) Use this with the $limit parameter to go through older messages.
+     *                       Can also be negative.
      *
      * @return string|boolean The answer of the history-command; false if somethings goes wrong
      *
      * @uses exec()
      * @uses escapePeer()
      *
-     * @see https://core.telegram.org/method/messages.getHistory
+     * @see  https://core.telegram.org/method/messages.getHistory
      */
     public function getHistory($peer, $limit = null, $offset = null)
     {
@@ -296,9 +300,9 @@ abstract class AbstractClientCommands
 
             //Lets see if we can use the file name given to us, otherwise we'll create a new unique filename.
             $originalFilename = pathinfo($fileUri, PATHINFO_BASENAME);
-            $mediaFileInfo = $this->determineFilename($originalFilename, $mediaFileInfo);
+            $mediaFileInfo    = $this->determineFilename($originalFilename, $mediaFileInfo);
 
-            $tempFileName              = fopen($mediaFileInfo['filepath'], 'w');
+            $tempFileName = fopen($mediaFileInfo['filepath'], 'w');
             if ($tempFileName) {
                 $this->downloadMediaFileFromURL($fileUri, $tempFileName);
             } else {
@@ -320,6 +324,7 @@ abstract class AbstractClientCommands
                 }
                 $mediaFileInfo['filepath']      = $fileUri;
                 $mediaFileInfo['fileextension'] = pathinfo($fileUri, PATHINFO_EXTENSION);
+
 //                $mediaFileInfo['filemimetype']  = get_mime($filepath);
 
                 return $mediaFileInfo;
@@ -412,7 +417,7 @@ abstract class AbstractClientCommands
      */
     protected function determineFilename($originalFilename, array $mediaFileInfo)
     {
-        if (is_null($originalFilename) || !isset($originalFilename) || is_file(sys_get_temp_dir() . '/' . $originalFilename)) {
+        if (is_null($originalFilename) || ! isset($originalFilename) || is_file(sys_get_temp_dir() . '/' . $originalFilename)) {
             //Need to create a unique file name as file either exists or we couldn't determine it.
             //Create temp file in system folder.
             $uniqueFilename = tempnam(sys_get_temp_dir(), 'tg');
