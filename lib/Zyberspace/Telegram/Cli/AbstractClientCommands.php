@@ -61,6 +61,63 @@ abstract class AbstractClientCommands
     }
 
     /**
+     * Sends a Document to $peer
+     *
+     * @param string $peer
+     * @param string $mediaUri Either a URL or a local filename of the media you wish to send
+     * @uses exec()
+     * @uses escapePeer()
+     * @uses escapeStringArgument()
+     * @return bool
+     */
+    public function sendDocument($peer, $mediaUri)
+    {
+        $peer = $this->escapePeer($peer);
+
+        //Process the requested media file.
+        $processedMedia = $this->processMediaUri($mediaUri);
+        if ( ! $processedMedia) {
+            return false;
+        }
+
+        //Send media file.
+        $result = $this->exec('send_document ' . $peer . ' ' . $processedMedia['filepath']);
+
+        //Clean up if media file came from REMOTE address
+        $this->cleanUpMedia($processedMedia);
+        return $result;
+    }
+
+    /**
+     * Sends a Photo to $peer
+     *
+     * @param string $peer
+     * @param string $mediaUri Either a URL or a local filename of the image you wish to send
+     * @uses exec()
+     * @uses escapePeer()
+     * @uses escapeStringArgument()
+     * @return bool
+     */
+    public function sendPhoto($peer, $mediaUri)
+    {
+        $peer = $this->escapePeer($peer);
+
+        //Process the requested media file.
+        $processedMedia = $this->processMediaUri($mediaUri);
+        if ( ! $processedMedia) {
+            return false;
+        }
+
+        //Send media file.
+        $result = $this->exec('send_photo ' . $peer . ' ' . $processedMedia['filepath']);
+
+        //Clean up if media file came from REMOTE address
+        $this->cleanUpMedia($processedMedia);
+        return $result;
+    }
+
+
+    /**
      * Adds a user to the contact list
      *
      * @param int|string $phoneNumber The phone-number of the new contact, needs to be a telegram-user.
@@ -212,5 +269,162 @@ abstract class AbstractClientCommands
         }
 
         return $this->exec('history ' . $this->escapePeer($peer) . $limit . $offset);
+    }
+
+    /**
+     * Takes a URI (in the form of a URL or local file path) and determines if
+     * the file exists and that it is not too big. If the file is remote (ie a URL)
+     * it will download the media file to the system temp directory for use.
+     *
+     * @param     $fileUri
+     * @param int $maxsizebytes
+     * @return array|bool
+     */
+    protected function processMediaUri($fileUri, $maxsizebytes = 10485760)
+    {
+        //Setup the mediafile Array to contain all the file's info.
+        $mediaFileInfo = array();
+
+        if (filter_var($fileUri, FILTER_VALIDATE_URL) !== false) {
+            //The URI provided was a URL. Lets check to see if it exists.
+            $mediaFileInfo = $this->checkUrlExistsAndSize($fileUri, $mediaFileInfo);
+
+            if ( ! $mediaFileInfo || $mediaFileInfo['filesize'] > $maxsizebytes) {
+                //File too big. Or doesn't exist. Don't Download.
+                return false;
+            }
+
+            //Lets see if we can use the file name given to us, otherwise we'll create a new unique filename.
+            $originalFilename = pathinfo($fileUri, PATHINFO_BASENAME);
+            $mediaFileInfo = $this->determineFilename($originalFilename, $mediaFileInfo);
+
+            $tempFileName              = fopen($mediaFileInfo['filepath'], 'w');
+            if ($tempFileName) {
+                $this->downloadMediaFileFromURL($fileUri, $tempFileName);
+            } else {
+                unlink($mediaFileInfo['filepath']);
+
+                return false;
+            }
+
+            //Success! We now have the file locally on our system to use.
+            return $mediaFileInfo;
+
+        } else {
+            if (is_file($fileUri)) {
+                //URI given was a local file name.
+                $mediaFileInfo['filesize'] = filesize($fileUri);
+                if ($mediaFileInfo['filesize'] > $maxsizebytes) {
+                    //File too big
+                    return false;
+                }
+                $mediaFileInfo['filepath']      = $fileUri;
+                $mediaFileInfo['fileextension'] = pathinfo($fileUri, PATHINFO_EXTENSION);
+//                $mediaFileInfo['filemimetype']  = get_mime($filepath);
+
+                return $mediaFileInfo;
+            }
+        }
+
+        //Couldn't tell what file was, local or URL.
+        return false;
+    }
+
+
+    /**
+     * Check that the URL given actually exists and is resolvable and that
+     * the file located there is within size limits.
+     *
+     * What are the size limits? I dunno!
+     *
+     * @param $fileUri
+     * @param $mediaFileInfo
+     * @return bool
+     */
+    private function checkUrlExistsAndSize($fileUri, $mediaFileInfo)
+    {
+        $mediaFileInfo['url'] = $fileUri;
+        //File is a URL. Create a curl connection but DON'T download the body content
+        //because we want to see if file is too big.
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, "$fileUri");
+        curl_setopt($curl, CURLOPT_USERAGENT,
+            "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11");
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_HEADER, false);
+        curl_setopt($curl, CURLOPT_NOBODY, true);
+
+        if (curl_exec($curl) === false) {
+            return false;
+        }
+
+        //While we're here, get mime type and filesize and extension
+        $info                           = curl_getinfo($curl);
+        $mediaFileInfo['filesize']      = $info['download_content_length'];
+        $mediaFileInfo['filemimetype']  = $info['content_type'];
+        $mediaFileInfo['fileextension'] = pathinfo(parse_url($mediaFileInfo['url'], PHP_URL_PATH), PATHINFO_EXTENSION);
+        curl_close($curl);
+
+        return $mediaFileInfo;
+    }
+
+    /**
+     * Download the file from the URL provided.
+     *
+     * @param $fileUri
+     * @param $tempMediaFileName
+     */
+    private function downloadMediaFileFromURL($fileUri, $tempMediaFileName)
+    {
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, "$fileUri");
+        curl_setopt($curl, CURLOPT_USERAGENT,
+            "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11");
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_HEADER, false);
+        curl_setopt($curl, CURLOPT_NOBODY, false);
+        curl_setopt($curl, CURLOPT_BUFFERSIZE, 1024);
+        curl_setopt($curl, CURLOPT_FILE, $tempMediaFileName);
+        curl_exec($curl);
+        curl_close($curl);
+
+        fclose($tempMediaFileName);
+    }
+
+    /**
+     * Clean up any temp files created if media file came from REMOTE address (eg URL)
+     * @param $processedMedia
+     */
+    protected function cleanUpMedia(array $processedMedia)
+    {
+        if (isset($processedMedia['url']) && file_exists($processedMedia['filepath'])) {
+            unlink($processedMedia['filepath']);
+        }
+    }
+
+    /**
+     * Determine if we can use the filename given to us via a URI or do
+     * we have to create an unique one in the system folder.
+     *
+     * @param $originalFilename
+     * @param $mediaFileInfo
+     * @return mixed
+     */
+    protected function determineFilename($originalFilename, array $mediaFileInfo)
+    {
+        if (is_null($originalFilename) || !isset($originalFilename) || is_file(sys_get_temp_dir() . '/' . $originalFilename)) {
+            //Need to create a unique file name as file either exists or we couldn't determine it.
+            //Create temp file in system folder.
+            $uniqueFilename = tempnam(sys_get_temp_dir(), 'tg');
+            //Add file extension
+            rename($uniqueFilename, $uniqueFilename . '.' . $mediaFileInfo['fileextension']);
+
+            $mediaFileInfo['filepath'] = $uniqueFilename . '.' . $mediaFileInfo['fileextension'];
+
+        } else {
+            $mediaFileInfo['filepath'] = sys_get_temp_dir() . '/' . $originalFilename;
+        }
+
+        return $mediaFileInfo;
     }
 }
