@@ -218,6 +218,25 @@ abstract class AbstractClientCommands
     }
 
     /**
+     * Sends a map of the supplied lat/long coordinated to $peer
+     *
+     * @param string $peer
+     * @param string $latitude in following format:
+     * @param string $longitude in following format:
+     *
+     * @uses exec()
+     * @uses escapePeer()
+     *
+     * @return mixed
+     */
+    public function sendLocation($peer, $latitude, $longitude){
+        //TODO some error checking for format of Lat/Long
+
+        $peer = $this->escapePeer($peer);
+
+        return $this->exec('send_location  ' . $peer . ' ' . $latitude . ' ' . $longitude);
+    }
+    /**
      * Sets the logged in users profile name
      *
      * @param string $firstName The new first name for the profile
