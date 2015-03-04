@@ -150,6 +150,35 @@ abstract class AbstractClientCommands
     }
 
     /**
+     * Sends the **contents** of a text file to $peer as plain text message
+     *
+     * @param string $peer
+     * @param string $mediaUri Either a URL or a local filename of the text file you wish to send
+     * @uses exec()
+     * @uses escapePeer()
+     * @uses escapeStringArgument()
+     * @return bool
+     */
+    public function sendText($peer, $mediaUri)
+    {
+        $peer = $this->escapePeer($peer);
+
+        //Process the requested media file.
+        $processedMedia = $this->processMediaUri($mediaUri);
+        if ( ! $processedMedia) {
+            return false;
+        }
+
+        //Send media file.
+        $result = $this->exec('send_text ' . $peer . ' ' . $processedMedia['filepath']);
+
+        //Clean up if media file came from REMOTE address
+        $this->cleanUpMedia($processedMedia);
+
+        return $result;
+    }
+
+    /**
      * Sends a Video to $peer
      *
      * @param string $peer
