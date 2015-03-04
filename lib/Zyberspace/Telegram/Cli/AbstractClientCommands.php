@@ -150,6 +150,35 @@ abstract class AbstractClientCommands
     }
 
     /**
+     * Sends a Video to $peer
+     *
+     * @param string $peer
+     * @param string $mediaUri Either a URL or a local filename of the video you wish to send
+     * @uses exec()
+     * @uses escapePeer()
+     * @uses escapeStringArgument()
+     * @return bool
+     */
+    public function sendVideo($peer, $mediaUri)
+    {
+        $peer = $this->escapePeer($peer);
+
+        //Process the requested media file.
+        $processedMedia = $this->processMediaUri($mediaUri);
+        if ( ! $processedMedia) {
+            return false;
+        }
+
+        //Send media file.
+        $result = $this->exec('send_video ' . $peer . ' ' . $processedMedia['filepath']);
+
+        //Clean up if media file came from REMOTE address
+        $this->cleanUpMedia($processedMedia);
+
+        return $result;
+    }
+
+    /**
      * Adds a user to the contact list
      *
      * @param int|string $phoneNumber The phone-number of the new contact, needs to be a telegram-user.
