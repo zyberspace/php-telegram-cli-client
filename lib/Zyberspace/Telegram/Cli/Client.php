@@ -500,17 +500,6 @@ class Client extends AbstractClientCommands
     }
 
     /**
-     * Alias function for msg
-     * @param $peer
-     * @param $msg
-     * @return bool
-     */
-    public function sendMsg($peer, $msg)
-    {
-        return $this->msg($peer, $msg);
-    }
-
-    /**
      * Sends a text message to $peer.
      *
      * @param string $peer The peer, gets escaped with escapePeer(),
@@ -523,12 +512,23 @@ class Client extends AbstractClientCommands
      * @uses escapePeer()
      * @uses escapeStringArgument()
      */
-    public function msg($peer, $msg)
+    public function sendMsg($peer, $msg)
     {
         $peer = $this->escapePeer($peer);
         $msg  = $this->escapeStringArgument($msg);
 
         return $this->exec('msg ' . $peer . ' ' . $msg);
+    }
+
+    /**
+     * Alias function for sendMsg
+     * @param string $peer
+     * @param string $msg
+     * @return bool
+     */
+    public function msg($peer, $msg)
+    {
+        return $this->sendMsg($peer, $msg);
     }
 
     /**
