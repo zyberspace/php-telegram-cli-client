@@ -63,6 +63,16 @@ abstract class AbstractClientCommands
     }
 
     /**
+     * Alias function for msg
+     * @param $peer
+     * @param $msg
+     * @return bool
+     */
+    public function sendMsg($peer, $msg){
+        return $this->msg($peer, $msg);
+    }
+
+    /**
      * Sends a Document to $peer
      *
      * @param string $peer
