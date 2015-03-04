@@ -208,6 +208,22 @@ abstract class AbstractClientCommands
     }
 
     /**
+     * Sets the logged in users profile name
+     *
+     * @param string $firstName The new first name for the profile
+     * @param string $lastName  The new last name for the profile
+     *
+     * @return string|boolean
+     *
+     * @uses exec()
+     * @uses escapeStringArgument()
+     */
+    public function setProfileName($firstName, $lastName)
+    {
+        return $this->exec('set_profile_name ' . $this->escapeStringArgument($firstName) . ' ' . $this->escapeStringArgument($lastName));
+    }
+
+    /**
      * Adds a user to the contact list
      *
      * @param int|string $phoneNumber The phone-number of the new contact, needs to be a telegram-user.
