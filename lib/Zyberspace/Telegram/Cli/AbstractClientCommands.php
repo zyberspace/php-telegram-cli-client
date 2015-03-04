@@ -453,7 +453,8 @@ abstract class AbstractClientCommands
      * Sets the status for the logged in user to Online.
      * @return mixed
      */
-    public function statusOnline(){
+    public function statusOnline()
+    {
         return $this->exec('status_online');
     }
 
@@ -461,7 +462,8 @@ abstract class AbstractClientCommands
      * Sets the status for the logged in user to Online.
      * @return mixed
      */
-    public function statusOffline(){
+    public function statusOffline()
+    {
         return $this->exec('status_offline');
     }
 
@@ -470,9 +472,24 @@ abstract class AbstractClientCommands
      * @param string $username
      * @return mixed
      */
-    public function setUsername($username){
-        return $this->exec('set_username '. $username);
+    public function setUsername($username)
+    {
+        return $this->exec('set_username ' . $username);
     }
+
+    /**
+     * Send the typing status to $peer
+     * @param string $peer
+     * @uses escapePeer()
+     * @return mixed
+     */
+    public function sendTyping($peer)
+    {
+        $peer = $this->escapePeer($peer);
+
+        return $this->exec('send_typing ' . $peer);
+    }
+
     /**
      * Takes a URI (in the form of a URL or local file path) and determines if
      * the file exists and that it is not too big. If the file is remote (ie a URL)
