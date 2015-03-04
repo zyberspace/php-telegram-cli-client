@@ -450,6 +450,22 @@ abstract class AbstractClientCommands
     }
 
     /**
+     * Sets the status for the logged in user to Online.
+     * @return mixed
+     */
+    public function statusOnline(){
+        return $this->exec('status_online');
+    }
+
+    /**
+     * Sets the status for the logged in user to Online.
+     * @return mixed
+     */
+    public function statusOffline(){
+        return $this->exec('status_offline');
+    }
+
+    /**
      * Takes a URI (in the form of a URL or local file path) and determines if
      * the file exists and that it is not too big. If the file is remote (ie a URL)
      * it will download the media file to the system temp directory for use.
