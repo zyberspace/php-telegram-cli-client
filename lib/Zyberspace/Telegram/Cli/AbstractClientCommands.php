@@ -236,6 +236,21 @@ abstract class AbstractClientCommands
 
         return $this->exec('send_location  ' . $peer . ' ' . $latitude . ' ' . $longitude);
     }
+
+    /**
+     * Sends contact to $peer (not necessary telegram user)
+     * @param string $peer
+     * @param string $phoneNumber in format
+     * @param string $firstName
+     * @param string $lastName
+     * @return mixed
+     */
+    public function sendContact($peer, $phoneNumber, $firstName, $lastName){
+        $phoneNumber = $this->formatPhoneNumber($phoneNumber);
+        $peer        = $this->escapePeer($peer);
+
+        return $this->exec('send_contact  ' . $peer . ' ' . $phoneNumber . ' ' . $firstName . ' ' . $lastName);
+    }
     /**
      * Sets the logged in users profile name
      *
@@ -294,10 +309,7 @@ abstract class AbstractClientCommands
      */
     public function addContact($phoneNumber, $firstName, $lastName)
     {
-        if (is_string($phoneNumber) && $phoneNumber[0] === '+') {
-            $phoneNumber = substr($phoneNumber, 1);
-        }
-        $phoneNumber = (int) $phoneNumber;
+        $phoneNumber = $this->formatPhoneNumber($phoneNumber);
 
         return $this->exec('add_contact ' . $phoneNumber . ' ' . $this->escapeStringArgument($firstName)
             . ' ' . $this->escapeStringArgument($lastName));
@@ -588,5 +600,19 @@ abstract class AbstractClientCommands
         }
 
         return $mediaFileInfo;
+    }
+
+    /**
+     * @param $phoneNumber
+     * @return int|string
+     */
+    protected function formatPhoneNumber($phoneNumber)
+    {
+        if (is_string($phoneNumber) && $phoneNumber[0] === '+') {
+            $phoneNumber = substr($phoneNumber, 1);
+        }
+        $phoneNumber = (int) $phoneNumber;
+
+        return $phoneNumber;
     }
 }
