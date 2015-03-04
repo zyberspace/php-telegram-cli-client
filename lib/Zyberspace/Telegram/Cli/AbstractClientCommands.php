@@ -224,6 +224,33 @@ abstract class AbstractClientCommands
     }
 
     /**
+     * Sets the profile picture for the logged in user
+     *
+     * The photo will be cropped to square
+     *
+     * @param $mediaUri Either a URL or a local filename of the photo you wish to set
+     * @return bool|string
+     *
+     * @uses     exec()
+     */
+    public function setProfilePhoto($mediaUri)
+    {
+        //Process the requested media file.
+        $processedMedia = $this->processMediaUri($mediaUri);
+        if ( ! $processedMedia) {
+            return false;
+        }
+
+        //Send media file.
+        $result = $this->exec('set_profile_photo ' . $processedMedia['filepath']);
+
+        //Clean up if media file came from REMOTE address
+        $this->cleanUpMedia($processedMedia);
+
+        return $result;
+    }
+
+    /**
      * Adds a user to the contact list
      *
      * @param int|string $phoneNumber The phone-number of the new contact, needs to be a telegram-user.
