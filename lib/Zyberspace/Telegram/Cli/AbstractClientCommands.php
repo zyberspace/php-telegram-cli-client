@@ -366,7 +366,7 @@ abstract class AbstractClientCommands
 
     /**
      * Returns an array of all your dialogs in form of
-     * "User [firstName] [lastName]: [number of unread messages] unread". Will get better formated in the future.
+     * "User [firstName] [lastName]: [number of unread messages] unread". Will get better formatted in the future.
      *
      * @return array|boolean An array with your dialogs; false if somethings goes wrong
      *
