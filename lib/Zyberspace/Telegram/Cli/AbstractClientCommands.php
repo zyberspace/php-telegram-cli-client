@@ -311,7 +311,7 @@ abstract class AbstractClientCommands
      * @uses exec()
      * @uses escapeStringArgument()
      */
-    public function addContact($phoneNumber, $firstName, $lastName)
+    public function contactAdd($phoneNumber, $firstName, $lastName)
     {
         $phoneNumber = $this->formatPhoneNumber($phoneNumber);
 
@@ -332,7 +332,7 @@ abstract class AbstractClientCommands
      * @uses exec()
      * @uses escapeStringArgument()
      */
-    public function renameContact($contact, $firstName, $lastName)
+    public function contactRename($contact, $firstName, $lastName)
     {
         return $this->exec('rename_contact ' . $this->escapePeer($contact)
             . ' ' . $this->escapeStringArgument($firstName) . ' ' . $this->escapeStringArgument($lastName));
@@ -349,7 +349,7 @@ abstract class AbstractClientCommands
      * @uses exec()
      * @uses escapePeer()
      */
-    public function deleteContact($contact)
+    public function contactDelete($contact)
     {
         return $this->exec('del_contact ' . $this->escapePeer($contact));
     }
@@ -489,6 +489,19 @@ abstract class AbstractClientCommands
 
         return $this->exec('send_typing ' . $peer);
     }
+
+    /**
+     * Create a group chat with $peers
+     *
+     * @param string $groupName The name of the groupchat
+     * @param array $peers All peers to be included in chat
+     */
+    public function chatCreateGroup($groupName, array $peers){
+        $peerList = $this->formatPeers($peers);
+        $this->exec('create_group_chat '. $groupName. ' '.$peerList);
+    }
+
+
 
     /**
      * Takes a URI (in the form of a URL or local file path) and determines if
@@ -659,5 +672,10 @@ abstract class AbstractClientCommands
         $phoneNumber = (int) $phoneNumber;
 
         return $phoneNumber;
+    }
+
+    private function formatPeers(array $peers)
+    {
+        return implode('+', $peers);
     }
 }
