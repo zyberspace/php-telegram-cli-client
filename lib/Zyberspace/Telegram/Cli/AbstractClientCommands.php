@@ -120,6 +120,34 @@ abstract class AbstractClientCommands
         return $result;
     }
 
+    /**
+     * Sends a Audio file to $peer
+     *
+     * @param string $peer
+     * @param string $mediaUri Either a URL or a local filename of the audio you wish to send
+     * @uses exec()
+     * @uses escapePeer()
+     * @uses escapeStringArgument()
+     * @return bool
+     */
+    public function sendAudio($peer, $mediaUri)
+    {
+        $peer = $this->escapePeer($peer);
+
+        //Process the requested media file.
+        $processedMedia = $this->processMediaUri($mediaUri);
+        if ( ! $processedMedia) {
+            return false;
+        }
+
+        //Send media file.
+        $result = $this->exec('send_audio ' . $peer . ' ' . $processedMedia['filepath']);
+
+        //Clean up if media file came from REMOTE address
+        $this->cleanUpMedia($processedMedia);
+
+        return $result;
+    }
 
     /**
      * Adds a user to the contact list
