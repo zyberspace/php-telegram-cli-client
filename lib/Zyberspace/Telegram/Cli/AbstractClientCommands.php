@@ -378,8 +378,8 @@ abstract class AbstractClientCommands
     }
 
     /**
-     * Executes the history-command and returns it answer (the answer is unformated right now).
-     * Will get better formated in the future.
+     * Executes the history-command and returns the answer (the answer is un-formatted right now).
+     * Will get better formatted in the future.
      *
      * @param string $peer   The peer, gets escaped with escapePeer(),
      *                       so you can directly use the values from getContactList()
@@ -444,6 +444,7 @@ abstract class AbstractClientCommands
             $tempFileName = fopen($mediaFileInfo['filepath'], 'w');
             if ($tempFileName) {
                 $this->downloadMediaFileFromURL($fileUri, $tempFileName);
+                fclose($tempFileName);
             } else {
                 unlink($mediaFileInfo['filepath']);
 
@@ -516,9 +517,9 @@ abstract class AbstractClientCommands
      * Download the file from the URL provided.
      *
      * @param $fileUri
-     * @param $tempMediaFileName
+     * @param $tempFileName
      */
-    private function downloadMediaFileFromURL($fileUri, $tempMediaFileName)
+    private function downloadMediaFileFromURL($fileUri, $tempFileName)
     {
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_URL, "$fileUri");
@@ -528,11 +529,9 @@ abstract class AbstractClientCommands
         curl_setopt($curl, CURLOPT_HEADER, false);
         curl_setopt($curl, CURLOPT_NOBODY, false);
         curl_setopt($curl, CURLOPT_BUFFERSIZE, 1024);
-        curl_setopt($curl, CURLOPT_FILE, $tempMediaFileName);
+        curl_setopt($curl, CURLOPT_FILE, $tempFileName);
         curl_exec($curl);
         curl_close($curl);
-
-        fclose($tempMediaFileName);
     }
 
     /**
