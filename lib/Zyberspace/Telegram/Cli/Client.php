@@ -13,46 +13,60 @@ namespace Zyberspace\Telegram\Cli;
  */
 class Client extends AbstractClientCommands
 {
+
     /**
      * Add a $peer to a group chat. Sends him the last $msgToForward messages from this chat
      *
-     * @param     $chat
+     * @param        $chat
      * @param string $peer
-     * @param int $msgToForward
+     * @param int    $msgToForward
      * @return mixed
      */
-    public function chatAddUser($chat, $peer, $msgToForward = 100){
-        $this->escapePeer($peer);
-        return $this->exec('chat_add_user '. $chat. ' ' . $peer. ' ' . $msgToForward);
+    public function chatAddUser($chat, $peer, $msgToForward = 100)
+    {
+        $peer = $this->escapePeer($peer);
+
+        return $this->exec('chat_add_user ' . $chat . ' ' . $peer . ' ' . $msgToForward);
     }
 
     /**
      * Create a group chat with $peers
      *
-     * @param string $groupName The name of the groupchat
+     * @param string $groupName The name of the group chat
      * @param array  $peers     All peers to be included in chat
      * @return bool|string
      */
-    public function chatCreateGroup($groupName, array $peers){
+    public function chatCreateGroup($groupName, array $peers)
+    {
         $peerList = $this->formatPeers($peers);
-        return $this->exec('create_group_chat '. $groupName. ' '.$peerList);
+
+        return $this->exec('create_group_chat ' . $groupName . ' ' . $peerList);
     }
 
+    /**
+     * Formats an array of peers so they can be used with group chats
+     *
+     * @param array $peers
+     * @return string
+     */
     private function formatPeers(array $peers)
     {
+        //TODO check this!!
         return implode('+', $peers);
     }
 
     /**
      * Deletes $peer from $chat
      *
-     * @param $chat
+     * @param        $chat
      * @param string $peer
      * @return mixed
      */
-    public function chatDelUser($chat, $peer){
-        $this->escapePeer($peer);
-        return $this->exec('chat_del_user '. $chat. ' ' . $peer);
+    public function chatDelUser($chat, $peer)
+    {
+        $peer = $this->escapePeer($peer);
+
+        return $this->exec('chat_del_user ' . $chat . ' ' . $peer);
     }
 
     /**
@@ -60,7 +74,7 @@ class Client extends AbstractClientCommands
      *
      * The photo will be cropped to square
      *
-     * @param $chat
+     * @param        $chat
      * @param string $mediaUri Either a URL or a local filename of the photo you wish to set
      * @return bool|string
      * @uses     exec()
@@ -87,8 +101,8 @@ class Client extends AbstractClientCommands
      * the file exists and that it is not too big. If the file is remote (ie a URL)
      * it will download the media file to the system temp directory for use.
      *
-     * @param     $fileUri
-     * @param int $maxsizebytes
+     * @param string $fileUri
+     * @param int    $maxsizebytes
      * @return array|bool
      */
     protected function processMediaUri($fileUri, $maxsizebytes = 10485760)
@@ -149,11 +163,11 @@ class Client extends AbstractClientCommands
      *
      * What are the size limits? I dunno!
      *
-     * @param $fileUri
-     * @param $mediaFileInfo
+     * @param string $fileUri
+     * @param array  $mediaFileInfo
      * @return bool|array
      */
-    protected function checkUrlExistsAndSize($fileUri, $mediaFileInfo)
+    protected function checkUrlExistsAndSize($fileUri, array $mediaFileInfo)
     {
         $mediaFileInfo['url'] = $fileUri;
         //File is a URL. Create a curl connection but DON'T download the body content
@@ -184,8 +198,8 @@ class Client extends AbstractClientCommands
      * Determine if we can use the filename given to us via a URI or do
      * we have to create an unique one in the system folder.
      *
-     * @param $originalFilename
-     * @param $mediaFileInfo
+     * @param string $originalFilename
+     * @param array  $mediaFileInfo
      * @return mixed
      */
     protected function determineFilename($originalFilename, array $mediaFileInfo)
@@ -209,8 +223,8 @@ class Client extends AbstractClientCommands
     /**
      * Download the file from the URL provided.
      *
-     * @param $fileUri
-     * @param $tempFileName
+     * @param string $fileUri
+     * @param string $tempFileName
      */
     protected function downloadMediaFileFromURL($fileUri, $tempFileName)
     {
@@ -229,7 +243,7 @@ class Client extends AbstractClientCommands
 
     /**
      * Clean up any temp files created if media file came from REMOTE address (eg URL)
-     * @param $processedMedia
+     * @param array $processedMedia
      */
     protected function cleanUpMedia(array $processedMedia)
     {
@@ -409,6 +423,7 @@ class Client extends AbstractClientCommands
      *
      * @param string $peer
      * @param string $mediaUri Either a URL or a local filename of the audio you wish to send
+     *
      * @uses exec()
      * @uses escapePeer()
      * @uses escapeStringArgument()
@@ -536,6 +551,7 @@ class Client extends AbstractClientCommands
      *
      * @param string $peer
      * @param string $mediaUri Either a URL or a local filename of the image you wish to send
+     *
      * @uses exec()
      * @uses escapePeer()
      * @uses escapeStringArgument()
@@ -565,6 +581,7 @@ class Client extends AbstractClientCommands
      *
      * @param string $peer
      * @param string $mediaUri Either a URL or a local filename of the text file you wish to send
+     *
      * @uses exec()
      * @uses escapePeer()
      * @uses escapeStringArgument()
@@ -591,7 +608,9 @@ class Client extends AbstractClientCommands
 
     /**
      * Send the typing status to $peer
+     *
      * @param string $peer
+     *
      * @uses escapePeer()
      * @return mixed
      */
@@ -607,6 +626,7 @@ class Client extends AbstractClientCommands
      *
      * @param string $peer
      * @param string $mediaUri Either a URL or a local filename of the video you wish to send
+     *
      * @uses exec()
      * @uses escapePeer()
      * @uses escapeStringArgument()
@@ -637,10 +657,9 @@ class Client extends AbstractClientCommands
      * @param string $firstName The new first name for the profile
      * @param string $lastName  The new last name for the profile
      *
-     * @return string|boolean
-     *
      * @uses exec()
      * @uses escapeStringArgument()
+     * @return string|boolean
      */
     public function setProfileName($firstName, $lastName)
     {
@@ -653,9 +672,9 @@ class Client extends AbstractClientCommands
      * The photo will be cropped to square
      *
      * @param string $mediaUri Either a URL or a local filename of the photo you wish to set
-     * @return bool|string
      *
      * @uses     exec()
+     * @return bool|string
      */
     public function setProfilePhoto($mediaUri)
     {
@@ -707,5 +726,4 @@ class Client extends AbstractClientCommands
     {
         return $this->exec('set_username ' . $username);
     }
-
 }
