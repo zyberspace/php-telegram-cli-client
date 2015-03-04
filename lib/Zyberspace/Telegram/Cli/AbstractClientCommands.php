@@ -498,10 +498,21 @@ abstract class AbstractClientCommands
      */
     public function chatCreateGroup($groupName, array $peers){
         $peerList = $this->formatPeers($peers);
-        $this->exec('create_group_chat '. $groupName. ' '.$peerList);
+        return $this->exec('create_group_chat '. $groupName. ' '.$peerList);
     }
 
-
+    /**
+     * Add a $peer to a group chat. Sends him the last $msgToForward messages from this chat
+     *
+     * @param     $chat
+     * @param string $peer
+     * @param int $msgToForward
+     * @return mixed
+     */
+    public function chatAddUser($chat, $peer, $msgToForward = 100){
+        $this->escapePeer($peer);
+        return $this->exec('chat_add_user '. $chat. ' ' . $peer. ' ' . $msgToForward);
+    }
 
     /**
      * Takes a URI (in the form of a URL or local file path) and determines if
