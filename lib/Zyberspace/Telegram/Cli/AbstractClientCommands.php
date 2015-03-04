@@ -526,6 +526,32 @@ abstract class AbstractClientCommands
         return $this->exec('chat_del_user '. $chat. ' ' . $peer);
     }
 
+    /**
+     * Sets the group chat picture for specified $chat
+     *
+     * The photo will be cropped to square
+     *
+     * @param $chat
+     * @param $mediaUri Either a URL or a local filename of the photo you wish to set
+     * @return bool|string
+     * @uses     exec()
+     */
+    public function chatSetPhoto($chat, $mediaUri)
+    {
+        //Process the requested media file.
+        $processedMedia = $this->processMediaUri($mediaUri);
+        if ( ! $processedMedia) {
+            return false;
+        }
+
+        //Send media file.
+        $result = $this->exec('chat_set_photo ' . $chat . ' ' . $processedMedia['filepath']);
+
+        //Clean up if media file came from REMOTE address
+        $this->cleanUpMedia($processedMedia);
+
+        return $result;
+    }
 
     /**
      * Takes a URI (in the form of a URL or local file path) and determines if
