@@ -515,6 +515,19 @@ abstract class AbstractClientCommands
     }
 
     /**
+     * Deletes $peer from $chat
+     *
+     * @param $chat
+     * @param string $peer
+     * @return mixed
+     */
+    public function chatDelUser($chat, $peer){
+        $this->escapePeer($peer);
+        return $this->exec('chat_del_user '. $chat. ' ' . $peer);
+    }
+
+
+    /**
      * Takes a URI (in the form of a URL or local file path) and determines if
      * the file exists and that it is not too big. If the file is remote (ie a URL)
      * it will download the media file to the system temp directory for use.
