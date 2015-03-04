@@ -68,7 +68,8 @@ abstract class AbstractClientCommands
      * @param $msg
      * @return bool
      */
-    public function sendMsg($peer, $msg){
+    public function sendMsg($peer, $msg)
+    {
         return $this->msg($peer, $msg);
     }
 
@@ -221,7 +222,7 @@ abstract class AbstractClientCommands
      * Sends a map of the supplied lat/long coordinated to $peer
      *
      * @param string $peer
-     * @param string $latitude in following format:
+     * @param string $latitude  in following format:
      * @param string $longitude in following format:
      *
      * @uses exec()
@@ -229,7 +230,8 @@ abstract class AbstractClientCommands
      *
      * @return mixed
      */
-    public function sendLocation($peer, $latitude, $longitude){
+    public function sendLocation($peer, $latitude, $longitude)
+    {
         //TODO some error checking for format of Lat/Long
 
         $peer = $this->escapePeer($peer);
@@ -245,12 +247,14 @@ abstract class AbstractClientCommands
      * @param string $lastName
      * @return mixed
      */
-    public function sendContact($peer, $phoneNumber, $firstName, $lastName){
+    public function sendContact($peer, $phoneNumber, $firstName, $lastName)
+    {
         $phoneNumber = $this->formatPhoneNumber($phoneNumber);
         $peer        = $this->escapePeer($peer);
 
         return $this->exec('send_contact  ' . $peer . ' ' . $phoneNumber . ' ' . $firstName . ' ' . $lastName);
     }
+
     /**
      * Sets the logged in users profile name
      *
