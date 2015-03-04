@@ -466,6 +466,14 @@ abstract class AbstractClientCommands
     }
 
     /**
+     * Sets the username for the logged in User
+     * @param string $username
+     * @return mixed
+     */
+    public function setUsername($username){
+        return $this->exec('set_username '. $username);
+    }
+    /**
      * Takes a URI (in the form of a URL or local file path) and determines if
      * the file exists and that it is not too big. If the file is remote (ie a URL)
      * it will download the media file to the system temp directory for use.
