@@ -432,6 +432,38 @@ class Client extends AbstractClientCommands
     }
 
     /**
+     * Alias function for sendMsg
+     * @param string $peer
+     * @param string $msg
+     * @return bool
+     */
+    public function msg($peer, $msg)
+    {
+        return $this->sendMsg($peer, $msg);
+    }
+
+    /**
+     * Sends a text message to $peer.
+     *
+     * @param string $peer The peer, gets escaped with escapePeer(),
+     *                     so you can directly use the values from getContactList()
+     * @param string $msg  The message to send, gets escaped with escapeStringArgument()
+     *
+     * @return boolean true on success, false otherwise
+     *
+     * @uses exec()
+     * @uses escapePeer()
+     * @uses escapeStringArgument()
+     */
+    public function sendMsg($peer, $msg)
+    {
+        $peer = $this->escapePeer($peer);
+        $msg  = $this->escapeStringArgument($msg);
+
+        return $this->exec('msg ' . $peer . ' ' . $msg);
+    }
+
+    /**
      * Sends a Audio file to $peer
      *
      * @param string $peer
@@ -530,35 +562,13 @@ class Client extends AbstractClientCommands
     }
 
     /**
-     * Sends a text message to $peer.
-     *
-     * @param string $peer The peer, gets escaped with escapePeer(),
-     *                     so you can directly use the values from getContactList()
-     * @param string $msg  The message to send, gets escaped with escapeStringArgument()
-     *
-     * @return boolean true on success, false otherwise
-     *
-     * @uses exec()
-     * @uses escapePeer()
-     * @uses escapeStringArgument()
+     * Formats the coordinates given to a max of 6 decimal places.
+     * @param $coordinate
+     * @return float
      */
-    public function sendMsg($peer, $msg)
+    protected function formatCoordinate($coordinate)
     {
-        $peer = $this->escapePeer($peer);
-        $msg  = $this->escapeStringArgument($msg);
-
-        return $this->exec('msg ' . $peer . ' ' . $msg);
-    }
-
-    /**
-     * Alias function for sendMsg
-     * @param string $peer
-     * @param string $msg
-     * @return bool
-     */
-    public function msg($peer, $msg)
-    {
-        return $this->sendMsg($peer, $msg);
+        return (float) round(preg_replace("/[^0-9.-]/", "", $coordinate), 6);
     }
 
     /**
@@ -757,15 +767,5 @@ class Client extends AbstractClientCommands
     public function setUsername($username)
     {
         return $this->exec('set_username ' . $username);
-    }
-
-    /**
-     * Formats the coordinates given to a max of 6 decimal places.
-     * @param $coordinate
-     * @return float
-     */
-    protected function formatCoordinate($coordinate)
-    {
-        return (float) round(preg_replace("/[^0-9.-]/", "", $coordinate), 6);
     }
 }
