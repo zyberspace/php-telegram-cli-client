@@ -24,6 +24,7 @@ class Client extends AbstractClientCommands
      */
     public function chatAddUser($chat, $peer, $msgToForward = 100)
     {
+        $chat = $this->escapePeer($chat); //Not escapeStringArgument as chat needs underscores if spaces in name
         $peer = $this->escapePeer($peer);
 
         return $this->exec('chat_add_user ' . $chat . ' ' . $peer . ' ' . $msgToForward);
@@ -38,7 +39,8 @@ class Client extends AbstractClientCommands
      */
     public function chatCreateGroup($groupName, array $peers)
     {
-        $peerList = $this->formatPeers($peers);
+        $groupName = $this->escapeStringArgument($groupName);
+        $peerList  = $this->formatPeers($peers);
 
         return $this->exec('create_group_chat ' . $groupName . ' ' . $peerList);
     }
@@ -51,8 +53,9 @@ class Client extends AbstractClientCommands
      */
     private function formatPeers(array $peers)
     {
-        //TODO check this!!
-        return implode('+', $peers);
+        $peers = array_map(array($this, 'escapePeer'), $peers);
+
+        return implode(' ', $peers);
     }
 
     /**
@@ -64,6 +67,7 @@ class Client extends AbstractClientCommands
      */
     public function chatDelUser($chat, $peer)
     {
+        $chat = $this->escapePeer($chat); //Not escapeStringArgument as chat needs underscores if spaces in name
         $peer = $this->escapePeer($peer);
 
         return $this->exec('chat_del_user ' . $chat . ' ' . $peer);
@@ -81,6 +85,8 @@ class Client extends AbstractClientCommands
      */
     public function chatSetPhoto($chat, $mediaUri)
     {
+        $chat = $this->escapePeer($chat); //Not escapeStringArgument as chat needs underscores if spaces in name
+
         //Process the requested media file.
         $processedMedia = $this->processMediaUri($mediaUri);
         if ( ! $processedMedia) {
@@ -279,10 +285,11 @@ class Client extends AbstractClientCommands
      */
     protected function formatPhoneNumber($phoneNumber)
     {
-        if (is_string($phoneNumber) && $phoneNumber[0] === '+') {
-            $phoneNumber = substr($phoneNumber, 1);
+        $phoneNumber = preg_replace("/[^0-9]/", "", $phoneNumber);
+
+        if ($phoneNumber[0] != 0) {
+            return ('+' . $phoneNumber);
         }
-        $phoneNumber = (int) $phoneNumber;
 
         return $phoneNumber;
     }
@@ -319,8 +326,11 @@ class Client extends AbstractClientCommands
      */
     public function contactRename($contact, $firstName, $lastName)
     {
-        return $this->exec('rename_contact ' . $this->escapePeer($contact)
-            . ' ' . $this->escapeStringArgument($firstName) . ' ' . $this->escapeStringArgument($lastName));
+        $contact   = $this->escapePeer($contact);
+        $firstName = $this->escapeStringArgument($firstName);
+        $lastName  = $this->escapeStringArgument($lastName);
+
+        return $this->exec('rename_contact ' . $contact . ' ' . $firstName . ' ' . $lastName);
     }
 
     /**
@@ -337,7 +347,10 @@ class Client extends AbstractClientCommands
 
     /**
      * Returns an array of all your dialogs in form of
-     * "User [firstName] [lastName]: [number of unread messages] unread". Will get better formatted in the future.
+     * "User [firstName] [lastName]: [number of unread messages] unread"  Or
+     * "Chat [group chat name]: [number of unread messages] unread"
+     *
+     * Will get better formatted in the future.
      *
      * @return array|boolean An array with your dialogs; false if somethings goes wrong
      *
@@ -458,8 +471,10 @@ class Client extends AbstractClientCommands
      */
     public function sendContact($peer, $phoneNumber, $firstName, $lastName)
     {
-        $phoneNumber = $this->formatPhoneNumber($phoneNumber);
         $peer        = $this->escapePeer($peer);
+        $phoneNumber = $this->formatPhoneNumber($phoneNumber);
+        $firstName   = $this->escapeStringArgument($firstName);
+        $lastName    = $this->escapeStringArgument($lastName);
 
         return $this->exec('send_contact  ' . $peer . ' ' . $phoneNumber . ' ' . $firstName . ' ' . $lastName);
     }
@@ -497,8 +512,8 @@ class Client extends AbstractClientCommands
      * Sends a map of the supplied lat/long coordinated to $peer
      *
      * @param string $peer
-     * @param string $latitude  in following format:
-     * @param string $longitude in following format:
+     * @param string $latitude  in decimal format up to 6 decimal places. Eg: 37.018757
+     * @param string $longitude in decimal format up to 6 decimal places. Eg: -7.965297
      *
      * @uses exec()
      * @uses escapePeer()
@@ -507,9 +522,9 @@ class Client extends AbstractClientCommands
      */
     public function sendLocation($peer, $latitude, $longitude)
     {
-        //TODO some error checking for format of Lat/Long
-
-        $peer = $this->escapePeer($peer);
+        $latitude  = $this->formatCoordinate($latitude);
+        $longitude = $this->formatCoordinate($longitude);
+        $peer      = $this->escapePeer($peer);
 
         return $this->exec('send_location  ' . $peer . ' ' . $latitude . ' ' . $longitude);
     }
@@ -614,11 +629,26 @@ class Client extends AbstractClientCommands
      * @uses escapePeer()
      * @return mixed
      */
-    public function sendTyping($peer)
+    public function sendTypingStart($peer)
     {
         $peer = $this->escapePeer($peer);
 
         return $this->exec('send_typing ' . $peer);
+    }
+
+    /**
+     * Stop the typing status to $peer
+     *
+     * @param string $peer
+     *
+     * @uses escapePeer()
+     * @return mixed
+     */
+    public function sendTypingStop($peer)
+    {
+        $peer = $this->escapePeer($peer);
+
+        return $this->exec('send_typing_abort ' . $peer);
     }
 
     /**
@@ -719,11 +749,23 @@ class Client extends AbstractClientCommands
 
     /**
      * Sets the username for the logged in User
+     * Must be a minimum of 5 characters.
+     *
      * @param string $username
      * @return mixed
      */
     public function setUsername($username)
     {
         return $this->exec('set_username ' . $username);
+    }
+
+    /**
+     * Formats the coordinates given to a max of 6 decimal places.
+     * @param $coordinate
+     * @return float
+     */
+    protected function formatCoordinate($coordinate)
+    {
+        return (float) round(preg_replace("/[^0-9.-]/", "", $coordinate), 6);
     }
 }
