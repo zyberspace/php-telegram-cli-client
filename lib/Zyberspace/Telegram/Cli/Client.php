@@ -62,6 +62,19 @@ class Client extends AbstractClientCommands
     }
 
     /**
+     * Create a secret chat with $peer
+     *
+     * @param string $peer The peer you wish to start a secret chat with.
+     * @return bool|string
+     */
+    public function chatCreateSecret($peer)
+    {
+        $peer = $this->escapePeer($peer);
+
+        return $this->exec('create_secret_chat ' . $peer);
+    }
+
+    /**
      * Formats an array of peers so they can be used with group chats
      *
      * @param array $peers
