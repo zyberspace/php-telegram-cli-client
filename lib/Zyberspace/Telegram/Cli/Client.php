@@ -143,6 +143,14 @@ class Client extends AbstractClientCommands
         return $result;
     }
 
+    public function chatRename($chatName, $newChatName){
+
+        $chatName = $this->escapePeer($chatName); //Not escapeStringArgument as chat needs underscores if spaces in name
+        $newChatName = $this->escapeStringArgument($newChatName);
+
+        return $this->exec('rename_chat '. $chatName . ' ' . $newChatName);
+    }
+
     /**
      * Takes a URI (in the form of a URL or local file path) and determines if
      * the file exists and that it is not too big. If the file is remote (ie a URL)
@@ -453,7 +461,8 @@ class Client extends AbstractClientCommands
      */
     public function getUserInfo($user)
     {
-        return $this->exec('user_info ' . $this->escapePeer($user));
+        $user = $this->escapePeer($user);
+        return $this->exec('user_info ' . $user);
     }
 
     /**
@@ -469,7 +478,8 @@ class Client extends AbstractClientCommands
      */
     public function markRead($peer)
     {
-        return $this->exec('mark_read ' . $this->escapePeer($peer));
+        $peer = $this->escapePeer($peer);
+        return $this->exec('mark_read ' . $peer);
     }
 
     /**
