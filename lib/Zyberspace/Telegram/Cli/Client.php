@@ -15,6 +15,22 @@ class Client extends AbstractClientCommands
 {
 
     /**
+     * Sends a broadcast $msg to the array of $peers supplied
+     *
+     * @param array  $peers
+     * @param string $msg
+     * @return bool|string
+     */
+    public function broadcast(array $peers, $msg)
+    {
+        $peerList = $this->formatPeers($peers);
+        $msg      = $this->escapeStringArgument($msg);
+
+        return $this->exec('broadcast ' . $peerList . ' ' . $msg);
+    }
+
+
+    /**
      * Add a $peer to a group chat. Sends him the last $msgToForward messages from this chat
      *
      * @param        $chat
