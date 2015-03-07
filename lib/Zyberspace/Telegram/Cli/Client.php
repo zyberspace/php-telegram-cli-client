@@ -75,31 +75,6 @@ class Client extends AbstractClientCommands
     }
 
     /**
-     * Formats an array of peers so they can be used with group chats
-     *
-     * @param array $peers
-     * @return string
-     */
-    private function formatPeers(array $peers)
-    {
-        $peers = array_map(array($this, 'escapePeer'), $peers);
-
-        return implode(' ', $peers);
-    }
-
-    /**
-     * Returns info about a chat (id, members, admin, etc.)
-     *
-     * @param $chat
-     * @return bool|string
-     */
-    public function chatInfo($chat){
-        $chat = $this->escapePeer($chat);
-
-        return $this->exec('chat_info '. $chat);
-    }
-
-    /**
      * Deletes $peer from $chat
      *
      * @param        $chat
@@ -112,6 +87,35 @@ class Client extends AbstractClientCommands
         $peer = $this->escapePeer($peer);
 
         return $this->exec('chat_del_user ' . $chat . ' ' . $peer);
+    }
+
+    /**
+     * Returns info about a chat (id, members, admin, etc.)
+     *
+     * @param $chat
+     * @return bool|string
+     */
+    public function chatInfo($chat)
+    {
+        $chat = $this->escapePeer($chat);
+
+        return $this->exec('chat_info ' . $chat);
+    }
+
+    /**
+     * Rename a $chat to $newChatName
+     *
+     * @param string $chatName
+     * @param string $newChatName
+     * @return bool|string
+     */
+    public function chatRename($chatName, $newChatName)
+    {
+
+        $chatName    = $this->escapePeer($chatName); //Not escapeStringArgument as chat needs underscores if spaces in name
+        $newChatName = $this->escapeStringArgument($newChatName);
+
+        return $this->exec('rename_chat ' . $chatName . ' ' . $newChatName);
     }
 
     /**
@@ -144,178 +148,6 @@ class Client extends AbstractClientCommands
     }
 
     /**
-     * Rename a $chat to $newChatName
-     *
-     * @param string $chatName
-     * @param string $newChatName
-     * @return bool|string
-     */
-    public function chatRename($chatName, $newChatName)
-    {
-
-        $chatName    = $this->escapePeer($chatName); //Not escapeStringArgument as chat needs underscores if spaces in name
-        $newChatName = $this->escapeStringArgument($newChatName);
-
-        return $this->exec('rename_chat ' . $chatName . ' ' . $newChatName);
-    }
-
-    /**
-     * Takes a URI (in the form of a URL or local file path) and determines if
-     * the file exists and that it is not too big. If the file is remote (ie a URL)
-     * it will download the media file to the system temp directory for use.
-     *
-     * @param string $fileUri
-     * @param int    $maxsizebytes
-     * @return array|bool
-     */
-    protected function processMediaUri($fileUri, $maxsizebytes = 10485760)
-    {
-        //Setup the mediafile Array to contain all the file's info.
-        $mediaFileInfo = array();
-
-        if (filter_var($fileUri, FILTER_VALIDATE_URL) !== false) {
-            //The URI provided was a URL. Lets check to see if it exists.
-            $mediaFileInfo = $this->checkUrlExistsAndSize($fileUri, $mediaFileInfo);
-
-            if ( ! $mediaFileInfo || $mediaFileInfo['filesize'] > $maxsizebytes) {
-                //File too big. Or doesn't exist. Don't Download.
-                return false;
-            }
-
-            //Lets see if we can use the file name given to us, otherwise we'll create a new unique filename.
-            $originalFilename = pathinfo($fileUri, PATHINFO_BASENAME);
-            $mediaFileInfo    = $this->determineFilename($originalFilename, $mediaFileInfo);
-
-            $tempFileName = fopen($mediaFileInfo['filepath'], 'w');
-            if ($tempFileName) {
-                $this->downloadMediaFileFromURL($fileUri, $tempFileName);
-                fclose($tempFileName);
-            } else {
-                unlink($mediaFileInfo['filepath']);
-
-                return false;
-            }
-
-            //Success! We now have the file locally on our system to use.
-            return $mediaFileInfo;
-
-        } else {
-            if (is_file($fileUri)) {
-                //URI given was a local file name.
-                $mediaFileInfo['filesize'] = filesize($fileUri);
-                if ($mediaFileInfo['filesize'] > $maxsizebytes) {
-                    //File too big
-                    return false;
-                }
-                $mediaFileInfo['filepath']      = $fileUri;
-                $mediaFileInfo['fileextension'] = pathinfo($fileUri, PATHINFO_EXTENSION);
-
-//                $mediaFileInfo['filemimetype']  = get_mime($filepath);
-
-                return $mediaFileInfo;
-            }
-        }
-
-        //Couldn't tell what file was, local or URL.
-        return false;
-    }
-
-    /**
-     * Check that the URL given actually exists and is resolvable and that
-     * the file located there is within size limits.
-     *
-     * What are the size limits? I dunno!
-     *
-     * @param string $fileUri
-     * @param array  $mediaFileInfo
-     * @return bool|array
-     */
-    protected function checkUrlExistsAndSize($fileUri, array $mediaFileInfo)
-    {
-        $mediaFileInfo['url'] = $fileUri;
-        //File is a URL. Create a curl connection but DON'T download the body content
-        //because we want to see if file is too big.
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, "$fileUri");
-        curl_setopt($curl, CURLOPT_USERAGENT,
-            "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11");
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_HEADER, false);
-        curl_setopt($curl, CURLOPT_NOBODY, true);
-
-        if (curl_exec($curl) === false) {
-            return false;
-        }
-
-        //While we're here, get mime type and filesize and extension
-        $info                           = curl_getinfo($curl);
-        $mediaFileInfo['filesize']      = $info['download_content_length'];
-        $mediaFileInfo['filemimetype']  = $info['content_type'];
-        $mediaFileInfo['fileextension'] = pathinfo(parse_url($mediaFileInfo['url'], PHP_URL_PATH), PATHINFO_EXTENSION);
-        curl_close($curl);
-
-        return $mediaFileInfo;
-    }
-
-    /**
-     * Determine if we can use the filename given to us via a URI or do
-     * we have to create an unique one in the system folder.
-     *
-     * @param string $originalFilename
-     * @param array  $mediaFileInfo
-     * @return mixed
-     */
-    protected function determineFilename($originalFilename, array $mediaFileInfo)
-    {
-        if (is_null($originalFilename) || ! isset($originalFilename) || is_file(sys_get_temp_dir() . '/' . $originalFilename)) {
-            //Need to create a unique file name as file either exists or we couldn't determine it.
-            //Create temp file in system folder.
-            $uniqueFilename = tempnam(sys_get_temp_dir(), 'tg');
-            //Add file extension
-            rename($uniqueFilename, $uniqueFilename . '.' . $mediaFileInfo['fileextension']);
-
-            $mediaFileInfo['filepath'] = $uniqueFilename . '.' . $mediaFileInfo['fileextension'];
-
-        } else {
-            $mediaFileInfo['filepath'] = sys_get_temp_dir() . '/' . $originalFilename;
-        }
-
-        return $mediaFileInfo;
-    }
-
-    /**
-     * Download the file from the URL provided.
-     *
-     * @param string $fileUri
-     * @param string $tempFileName
-     */
-    protected function downloadMediaFileFromURL($fileUri, $tempFileName)
-    {
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, "$fileUri");
-        curl_setopt($curl, CURLOPT_USERAGENT,
-            "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11");
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_HEADER, false);
-        curl_setopt($curl, CURLOPT_NOBODY, false);
-        curl_setopt($curl, CURLOPT_BUFFERSIZE, 1024);
-        curl_setopt($curl, CURLOPT_FILE, $tempFileName);
-        curl_exec($curl);
-        curl_close($curl);
-    }
-
-    /**
-     * Clean up any temp files created if media file came from REMOTE address (eg URL)
-     * @param array $processedMedia
-     */
-    protected function cleanUpMedia(array $processedMedia)
-    {
-        if (isset($processedMedia['url']) && file_exists($processedMedia['filepath'])) {
-            unlink($processedMedia['filepath']);
-        }
-    }
-
-    /**
      * Adds a user to the contact list
      *
      * @param int|string $phoneNumber The phone-number of the new contact, needs to be a telegram-user.
@@ -335,22 +167,6 @@ class Client extends AbstractClientCommands
         return $this->exec('add_contact ' . $phoneNumber . ' ' . $this->escapeStringArgument($firstName)
             . ' ' . $this->escapeStringArgument($lastName));
     }
-
-    /**
-     * @param $phoneNumber
-     * @return int|string
-     */
-    protected function formatPhoneNumber($phoneNumber)
-    {
-        $phoneNumber = preg_replace("/[^0-9]/", "", $phoneNumber);
-
-        if ($phoneNumber[0] != 0) {
-            return ('+' . $phoneNumber);
-        }
-
-        return $phoneNumber;
-    }
-
 
     /**
      * Deletes a contact.
@@ -470,6 +286,7 @@ class Client extends AbstractClientCommands
     public function getUserInfo($user)
     {
         $user = $this->escapePeer($user);
+
         return $this->exec('user_info ' . $user);
     }
 
@@ -487,6 +304,7 @@ class Client extends AbstractClientCommands
     public function markRead($peer)
     {
         $peer = $this->escapePeer($peer);
+
         return $this->exec('mark_read ' . $peer);
     }
 
@@ -499,27 +317,6 @@ class Client extends AbstractClientCommands
     public function msg($peer, $msg)
     {
         return $this->sendMsg($peer, $msg);
-    }
-
-    /**
-     * Sends a text message to $peer.
-     *
-     * @param string $peer The peer, gets escaped with escapePeer(),
-     *                     so you can directly use the values from getContactList()
-     * @param string $msg  The message to send, gets escaped with escapeStringArgument()
-     *
-     * @return boolean true on success, false otherwise
-     *
-     * @uses exec()
-     * @uses escapePeer()
-     * @uses escapeStringArgument()
-     */
-    public function sendMsg($peer, $msg)
-    {
-        $peer = $this->escapePeer($peer);
-        $msg  = $this->escapeStringArgument($msg);
-
-        return $this->exec('msg ' . $peer . ' ' . $msg);
     }
 
     /**
@@ -621,13 +418,24 @@ class Client extends AbstractClientCommands
     }
 
     /**
-     * Formats the coordinates given to a max of 6 decimal places.
-     * @param $coordinate
-     * @return float
+     * Sends a text message to $peer.
+     *
+     * @param string $peer The peer, gets escaped with escapePeer(),
+     *                     so you can directly use the values from getContactList()
+     * @param string $msg  The message to send, gets escaped with escapeStringArgument()
+     *
+     * @return boolean true on success, false otherwise
+     *
+     * @uses exec()
+     * @uses escapePeer()
+     * @uses escapeStringArgument()
      */
-    protected function formatCoordinate($coordinate)
+    public function sendMsg($peer, $msg)
     {
-        return (float) round(preg_replace("/[^0-9.-]/", "", $coordinate), 6);
+        $peer = $this->escapePeer($peer);
+        $msg  = $this->escapeStringArgument($msg);
+
+        return $this->exec('msg ' . $peer . ' ' . $msg);
     }
 
     /**
@@ -826,5 +634,199 @@ class Client extends AbstractClientCommands
     public function setUsername($username)
     {
         return $this->exec('set_username ' . $username);
+    }
+
+    /**
+     * Check that the URL given actually exists and is resolvable and that
+     * the file located there is within size limits.
+     *
+     * What are the size limits? I dunno!
+     *
+     * @param string $fileUri
+     * @param array  $mediaFileInfo
+     * @return bool|array
+     */
+    protected function checkUrlExistsAndSize($fileUri, array $mediaFileInfo)
+    {
+        $mediaFileInfo['url'] = $fileUri;
+        //File is a URL. Create a curl connection but DON'T download the body content
+        //because we want to see if file is too big.
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, "$fileUri");
+        curl_setopt($curl, CURLOPT_USERAGENT,
+            "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11");
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_HEADER, false);
+        curl_setopt($curl, CURLOPT_NOBODY, true);
+
+        if (curl_exec($curl) === false) {
+            return false;
+        }
+
+        //While we're here, get mime type and filesize and extension
+        $info                           = curl_getinfo($curl);
+        $mediaFileInfo['filesize']      = $info['download_content_length'];
+        $mediaFileInfo['filemimetype']  = $info['content_type'];
+        $mediaFileInfo['fileextension'] = pathinfo(parse_url($mediaFileInfo['url'], PHP_URL_PATH), PATHINFO_EXTENSION);
+        curl_close($curl);
+
+        return $mediaFileInfo;
+    }
+
+    /**
+     * Clean up any temp files created if media file came from REMOTE address (eg URL)
+     * @param array $processedMedia
+     */
+    protected function cleanUpMedia(array $processedMedia)
+    {
+        if (isset($processedMedia['url']) && file_exists($processedMedia['filepath'])) {
+            unlink($processedMedia['filepath']);
+        }
+    }
+
+    /**
+     * Determine if we can use the filename given to us via a URI or do
+     * we have to create an unique one in the system folder.
+     *
+     * @param string $originalFilename
+     * @param array  $mediaFileInfo
+     * @return mixed
+     */
+    protected function determineFilename($originalFilename, array $mediaFileInfo)
+    {
+        if (is_null($originalFilename) || ! isset($originalFilename) || is_file(sys_get_temp_dir() . '/' . $originalFilename)) {
+            //Need to create a unique file name as file either exists or we couldn't determine it.
+            //Create temp file in system folder.
+            $uniqueFilename = tempnam(sys_get_temp_dir(), 'tg');
+            //Add file extension
+            rename($uniqueFilename, $uniqueFilename . '.' . $mediaFileInfo['fileextension']);
+
+            $mediaFileInfo['filepath'] = $uniqueFilename . '.' . $mediaFileInfo['fileextension'];
+
+        } else {
+            $mediaFileInfo['filepath'] = sys_get_temp_dir() . '/' . $originalFilename;
+        }
+
+        return $mediaFileInfo;
+    }
+
+    /**
+     * Download the file from the URL provided.
+     *
+     * @param string $fileUri
+     * @param string $tempFileName
+     */
+    protected function downloadMediaFileFromURL($fileUri, $tempFileName)
+    {
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, "$fileUri");
+        curl_setopt($curl, CURLOPT_USERAGENT,
+            "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.11) Gecko/20071127 Firefox/2.0.0.11");
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_HEADER, false);
+        curl_setopt($curl, CURLOPT_NOBODY, false);
+        curl_setopt($curl, CURLOPT_BUFFERSIZE, 1024);
+        curl_setopt($curl, CURLOPT_FILE, $tempFileName);
+        curl_exec($curl);
+        curl_close($curl);
+    }
+
+    /**
+     * Formats the coordinates given to a max of 6 decimal places.
+     * @param $coordinate
+     * @return float
+     */
+    protected function formatCoordinate($coordinate)
+    {
+        return (float) round(preg_replace("/[^0-9.-]/", "", $coordinate), 6);
+    }
+
+    /**
+     * Formats an array of peers so they can be used with group chats
+     *
+     * @param array $peers
+     * @return string
+     */
+    protected function formatPeers(array $peers)
+    {
+        $peers = array_map(array($this, 'escapePeer'), $peers);
+
+        return implode(' ', $peers);
+    }
+
+    /**
+     * @param $phoneNumber
+     * @return int|string
+     */
+    protected function formatPhoneNumber($phoneNumber)
+    {
+        $phoneNumber = preg_replace("/[^0-9]/", "", $phoneNumber);
+
+        if ($phoneNumber[0] != 0) {
+            return ('+' . $phoneNumber);
+        }
+
+        return $phoneNumber;
+    }
+
+    /**
+     * Takes a URI (in the form of a URL or local file path) and determines if
+     * the file exists and that it is not too big. If the file is remote (ie a URL)
+     * it will download the media file to the system temp directory for use.
+     *
+     * @param string $fileUri
+     * @param int    $maxsizebytes
+     * @return array|bool
+     */
+    protected function processMediaUri($fileUri, $maxsizebytes = 10485760)
+    {
+        //Setup the mediafile Array to contain all the file's info.
+        $mediaFileInfo = array();
+
+        if (filter_var($fileUri, FILTER_VALIDATE_URL) !== false) {
+            //The URI provided was a URL. Lets check to see if it exists.
+            $mediaFileInfo = $this->checkUrlExistsAndSize($fileUri, $mediaFileInfo);
+
+            if ( ! $mediaFileInfo || $mediaFileInfo['filesize'] > $maxsizebytes) {
+                //File too big. Or doesn't exist. Don't Download.
+                return false;
+            }
+
+            //Lets see if we can use the file name given to us, otherwise we'll create a new unique filename.
+            $originalFilename = pathinfo($fileUri, PATHINFO_BASENAME);
+            $mediaFileInfo    = $this->determineFilename($originalFilename, $mediaFileInfo);
+
+            $tempFileName = fopen($mediaFileInfo['filepath'], 'w');
+            if ($tempFileName) {
+                $this->downloadMediaFileFromURL($fileUri, $tempFileName);
+                fclose($tempFileName);
+            } else {
+                unlink($mediaFileInfo['filepath']);
+
+                return false;
+            }
+
+            //Success! We now have the file locally on our system to use.
+            return $mediaFileInfo;
+
+        } else {
+            if (is_file($fileUri)) {
+                //URI given was a local file name.
+                $mediaFileInfo['filesize'] = filesize($fileUri);
+                if ($mediaFileInfo['filesize'] > $maxsizebytes) {
+                    //File too big
+                    return false;
+                }
+                $mediaFileInfo['filepath']      = $fileUri;
+                $mediaFileInfo['fileextension'] = pathinfo($fileUri, PATHINFO_EXTENSION);
+
+//                $mediaFileInfo['filemimetype']  = get_mime($filepath);
+
+                return $mediaFileInfo;
+            }
+        }
+
+        //Couldn't tell what file was, local or URL.
+        return false;
     }
 }
