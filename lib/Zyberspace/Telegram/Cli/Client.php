@@ -75,6 +75,18 @@ class Client extends AbstractClientCommands
     }
 
     /**
+     * Returns info about a chat (id, members, admin, etc.)
+     *
+     * @param $chat
+     * @return bool|string
+     */
+    public function chatInfo($chat){
+        $chat = $this->escapePeer($chat);
+
+        return $this->exec('chat_info '. $chat);
+    }
+
+    /**
      * Deletes $peer from $chat
      *
      * @param        $chat
