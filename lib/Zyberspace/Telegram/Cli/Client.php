@@ -143,12 +143,20 @@ class Client extends AbstractClientCommands
         return $result;
     }
 
-    public function chatRename($chatName, $newChatName){
+    /**
+     * Rename a $chat to $newChatName
+     *
+     * @param string $chatName
+     * @param string $newChatName
+     * @return bool|string
+     */
+    public function chatRename($chatName, $newChatName)
+    {
 
-        $chatName = $this->escapePeer($chatName); //Not escapeStringArgument as chat needs underscores if spaces in name
+        $chatName    = $this->escapePeer($chatName); //Not escapeStringArgument as chat needs underscores if spaces in name
         $newChatName = $this->escapeStringArgument($newChatName);
 
-        return $this->exec('rename_chat '. $chatName . ' ' . $newChatName);
+        return $this->exec('rename_chat ' . $chatName . ' ' . $newChatName);
     }
 
     /**
