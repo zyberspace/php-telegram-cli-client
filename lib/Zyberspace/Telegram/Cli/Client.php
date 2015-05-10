@@ -9,96 +9,207 @@
 namespace Zyberspace\Telegram\Cli;
 
 /**
- * php-client for telegram-cli
+ * php-client for telegram-cli.
+ * If you don't need the command-wrappers in this class or want to make your own, use the RawClient-class. :)
  */
-class Client extends AbstractClientCommands
+class Client extends RawClient
 {
     /**
-     * The file handler for the socket-connection
+     * Sets status as online.
      *
-     * @var ressource
+     * @return boolean true on success, false otherwise
+     *
+     * @uses exec()
      */
-    protected $_fp;
+    public function setStatusOnline()
+    {
+        return $this->exec('status_online');
+    }
 
     /**
-     * Connects to the telegram-cli.
+     * Sets status as offline.
      *
-     * @param string $remoteSocket Address of the socket to connect to. See stream_socket_client() for more info.
-     *                             Can be 'unix://' or 'tcp://'.
+     * @return boolean true on success, false otherwise
      *
-     * @throws ClientException Throws an exception if no connection can be established.
+     * @uses exec()
      */
-    public function __construct($remoteSocket)
+    public function setStatusOffline()
     {
-        $this->_fp = stream_socket_client($remoteSocket);
-        if ($this->_fp === false) {
-            throw new ClientException('Could not connect to socket "' . $remoteSocket . '"');
+        return $this->exec('status_offline');
+    }
+
+    /**
+     * Sends a text message to $peer.
+     *
+     * @param string $peer The peer, gets escaped with escapePeer(),
+     *                     so you can directly use the values from getContactList()
+     * @param string $msg The message to send, gets escaped with escapeStringArgument()
+     *
+     * @return boolean true on success, false otherwise
+     *
+     * @uses exec()
+     * @uses escapePeer()
+     * @uses escapeStringArgument()
+     */
+    public function msg($peer, $msg)
+    {
+        $peer = $this->escapePeer($peer);
+        $msg = $this->escapeStringArgument($msg);
+        return $this->exec('msg ' . $peer . ' ' . $msg);
+    }
+
+    /**
+     * Adds a user to the contact list
+     *
+     * @param string $phoneNumber The phone-number of the new contact, needs to be a telegram-user.
+     *                            Every char that is not a number gets deleted, so you don't need to care about spaces,
+     *                            '+' and so on.
+     * @param string $firstName The first name of the new contact
+     * @param string $lastName The last name of the new contact
+     *
+     * @return string|boolean The new contact "$firstName $lastName"; false if somethings goes wrong
+     *
+     * @uses exec()
+     * @uses escapeStringArgument()
+     */
+    public function addContact($phoneNumber, $firstName, $lastName)
+    {
+        $phoneNumber = preg_replace('%[^0-9]%', '', (string) $phoneNumber);
+        if (empty($phoneNumber)) {
+            return false;
         }
-        stream_set_timeout($this->_fp, 1); //This way fgets() returns false if telegram-cli gives us no response.
+
+        return $this->exec('add_contact ' . $phoneNumber . ' ' . $this->escapeStringArgument($firstName)
+            . ' ' . $this->escapeStringArgument($lastName));
     }
 
     /**
-     * Closes the connection to the telegram-cli.
+     * Renames a user in the contact list
+     *
+     * @param string $contact The contact, gets escaped with escapePeer(),
+     *                        so you can directly use the values from getContactList()
+     * @param string $firstName The new first name for the contact
+     * @param string $lastName The new last name for the contact
+     *
+     * @return string|boolean The renamed contact "$firstName $lastName"; false if somethings goes wrong
+     *
+     * @uses exec()
+     * @uses escapeStringArgument()
      */
-    public function __destruct()
+    public function renameContact($contact, $firstName, $lastName)
     {
-        fclose($this->_fp);
+        return $this->exec('rename_contact ' . $this->escapePeer($contact)
+            . ' ' . $this->escapeStringArgument($firstName) . ' ' . $this->escapeStringArgument($lastName));
     }
 
     /**
-     * Executes a command on the telegram-cli. Line-breaks will be escaped, as telgram-cli does not support them.
+     * Deletes a contact.
      *
-     * @param string $command The command, including all arguments
+     * @param string $contact The contact, gets escaped with escapePeer(),
+     *                        so you can directly use the values from getContactList()
      *
-     * @return boolean|string Returns the answer as string or true on success, false if there was an error.
+     * @return boolean true on success, false otherwise
+     *
+     * @uses exec()
+     * @uses escapePeer()
      */
-    public function exec($command)
+    public function deleteContact($contact)
     {
-        fwrite($this->_fp, str_replace("\n", '\n', $command) . PHP_EOL);
+        return $this->exec('del_contact ' . $this->escapePeer($contact));
+    }
 
-        $answer = fgets($this->_fp); //"ANSWER $bytes" if there is a return value or \n if not
-        if (is_string($answer)) {
-            if (substr($answer, 0, 7) === 'ANSWER ') {
-                $bytes = (int) substr($answer, 7);
-                if ($bytes > 0) {
-                    $string = trim(fread($this->_fp, $bytes + 1));
+    /**
+     * Marks all messages with $peer as read.
+     *
+     * @param string $peer The peer, gets escaped with escapePeer(),
+     *                     so you can directly use the values from getContactList()
+     *
+     * @return boolean true on success, false otherwise
+     *
+     * @uses exec()
+     * @uses escapePeer()
+     */
+    public function markRead($peer)
+    {
+        return $this->exec('mark_read ' . $this->escapePeer($peer));
+    }
 
-                    if ($string === 'SUCCESS') { //For "status_online" and "status_offline"
-                        return true;
-                    }
+    /**
+     * Returns an array of all contacts in form of "[firstName] [lastName]".
+     *
+     * @return array|boolean An array with your contacts; false if somethings goes wrong
+     *
+     * @uses exec()
+     */
+    public function getContactList()
+    {
+        return explode(PHP_EOL, $this->exec('contact_list'));
+    }
 
-                    return $string;
-                }
-            } else if ($answer === PHP_EOL) { //For commands like "msg"
-                return true;
+    /**
+     * Executes the user_info-command and returns it answer (the answer is unformated right now).
+     * Will get better formated in the future.
+     *
+     * @param string $user The user, gets escaped with escapePeer(),
+     *                     so you can directly use the values from getContactList()
+     *
+     * @return string|boolean The answer of the user_info-command; false if somethings goes wrong
+     *
+     * @uses exec()
+     * @uses escapePeer()
+     */
+    public function getUserInfo($user)
+    {
+        return $this->exec('user_info ' . $this->escapePeer($user));
+    }
+
+    /**
+     * Returns an array of all your dialogs in form of
+     * "User [firstName] [lastName]: [number of unread messages] unread". Will get better formated in the future.
+     *
+     * @return array|boolean An array with your dialogs; false if somethings goes wrong
+     *
+     * @uses exec()
+     */
+    public function getDialogList()
+    {
+        return explode(PHP_EOL, $this->exec('dialog_list'));
+    }
+
+    /**
+     * Executes the history-command and returns it answer (the answer is unformated right now).
+     * Will get better formated in the future.
+     *
+     * @param string $peer The peer, gets escaped with escapePeer(),
+     *                     so you can directly use the values from getContactList()
+     * @param int $limit (optional) Limit answer to $limit messages. If not set, there is no limit.
+     * @param int $offset (optional) Use this with the $limit parameter to go through older messages.
+     *                    Can also be negative.
+     *
+     * @return string|boolean The answer of the history-command; false if somethings goes wrong
+     *
+     * @uses exec()
+     * @uses escapePeer()
+     *
+     * @see https://core.telegram.org/method/messages.getHistory
+     */
+    public function getHistory($peer, $limit = null, $offset = null)
+    {
+        if ($limit !== null) {
+            $limit = (int) $limit;
+            if ($limit < 1) { //if limit is lesser than 1, telegram-cli crashes
+                $limit = 1;
             }
+            $limit = ' ' . $limit;
+        } else {
+            $limit = '';
+        }
+        if ($offset !== null) {
+            $offset = ' ' . (int) $offset;
+        } else {
+            $offset = '';
         }
 
-        return false;
-    }
-
-    /**
-     * Escapes strings for usage as command-argument.
-     * T"es't -> "T\"es\'t"
-     *
-     * @param string $argument The argument to escape
-     *
-     * @return string The escaped command enclosed by double-quotes
-     */
-    public function escapeStringArgument($argument)
-    {
-        return '"' . addslashes($argument) . '"';
-    }
-
-    /**
-     * Replaces all spaces with underscores.
-     *
-     * @param string $peer The peer to escape
-     *
-     * @return string The escaped peer
-     */
-    public function escapePeer($peer)
-    {
-        return str_replace(' ', '_', $peer);
+        return $this->exec('history ' . $this->escapePeer($peer) . $limit . $offset);
     }
 }
