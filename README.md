@@ -2,7 +2,7 @@ zyberspace/telegram-cli-client
 ==============================
 php-client for [telegram-cli](https://github.com/vysheng/tg/)
 
-![license](https://img.shields.io/github/license/zyberspace/php-telegram-cli-client.svg)
+[![license](https://img.shields.io/github/license/zyberspace/php-telegram-cli-client.svg)](https://www.mozilla.org/MPL/2.0/)
 [![Gratipay](https://img.shields.io/gratipay/zyberspace.svg)](https://gratipay.com/zyberspace/)
 
 Requirements
