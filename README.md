@@ -52,9 +52,10 @@ An online-version is available at [phpdoc.zyberware.org/zyberspace/telegram-cli-
 
 Supported Commands
 ------------------
-You can execute every command with the `exec()`-method, but there are also several command-wrappers available in the `AbstractClientCommands`-Class ([doc-link](http://phpdoc.zyberware.org/zyberspace/telegram-cli-client/classes/Zyberspace.Telegram.Cli.AbstractClientCommands.html)), which the main class extends (see the `example.php`).
+You can execute every command with the `exec()`-method from the `RawClient`-class, but there are also several command-wrappers available ([doc-link](http://phpdoc.zyberware.org/zyberspace/telegram-cli-client/classes/Zyberspace.Telegram.Cli.Client.html)) that you should prefer to use (see the `example.php`).  
+If you prefer to only use your own command-wrappers instead, just extend the `RawClient`-class (takes care about the socket-connection and has some helper-methods).
 
-If you use `exec()` directly, please don't forget to escape the peer (contacts, chat-names, etc.) with `escapePeer()` and all string-arguments with `escapeStringArgument()` to avoid errors.
+In your command-wrappers or if you use `exec()` directly, please don't forget to escape the peers (contacts, chat-names, etc.) with `escapePeer()` and all string-arguments with `escapeStringArgument()` to avoid errors.
 
 API-Stability
 -------------
