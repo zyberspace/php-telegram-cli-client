@@ -63,8 +63,9 @@ abstract class AbstractClientCommands
     /**
      * Adds a user to the contact list
      *
-     * @param int|string $phoneNumber The phone-number of the new contact, needs to be a telegram-user.
-     *                                Can start with or without '+'.
+     * @param string $phoneNumber The phone-number of the new contact, needs to be a telegram-user.
+     *                            Every char that is not a number gets deleted, so you don't need to care about spaces,
+     *                            '+' and so on.
      * @param string $firstName The first name of the new contact
      * @param string $lastName The last name of the new contact
      *
@@ -75,10 +76,10 @@ abstract class AbstractClientCommands
      */
     public function addContact($phoneNumber, $firstName, $lastName)
     {
-        if (is_string($phoneNumber) && $phoneNumber[0] === '+') {
-            $phoneNumber = substr($phoneNumber, 1);
+        $phoneNumber = preg_replace('%[^0-9]%', '', (string) $phoneNumber);
+        if (empty($phoneNumber)) {
+            return false;
         }
-        $phoneNumber = (int) $phoneNumber;
 
         return $this->exec('add_contact ' . $phoneNumber . ' ' . $this->escapeStringArgument($firstName)
             . ' ' . $this->escapeStringArgument($lastName));
