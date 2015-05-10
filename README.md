@@ -2,6 +2,9 @@ zyberspace/telegram-cli-client
 ==============================
 php-client for [telegram-cli](https://github.com/vysheng/tg/)
 
+![license](https://img.shields.io/github/license/zyberspace/php-telegram-cli-client.svg)
+[![Gratipay](https://img.shields.io/gratipay/zyberspace.svg)](https://gratipay.com/zyberspace/)
+
 Requirements
 ------------
  - a running [telegram-cli](https://github.com/vysheng/tg/) listening on a unix-socket (`-S`) or a port (`-P`). Needs to be configured already (phone-number, etc.).
