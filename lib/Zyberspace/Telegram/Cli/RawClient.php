@@ -102,4 +102,19 @@ class RawClient
     {
         return str_replace(' ', '_', $peer);
     }
+
+    /**
+     * Takes a list of peers and turns it into a format needed by the most commands that handle multiple peers.
+     * Every single peer gets escaped by escapePeer().
+     *
+     * @param array $peerList The list of peers that shall get formated
+     *
+     * @return string The formated list of peers
+     *
+     * @uses escapePeer()
+     */
+    public function formatPeerList(array $peerList)
+    {
+        return implode(' ', array_map(array($this, 'escapePeer'), $peerList));
+    }
 }
