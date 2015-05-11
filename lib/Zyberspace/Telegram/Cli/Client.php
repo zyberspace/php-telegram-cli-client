@@ -88,6 +88,22 @@ class Client extends RawClient
     }
 
     /**
+     * Sets the profile name
+     *
+     * @param $firstName The first name
+     * @param $lastName The last name
+     *
+     * @return string|boolean The new profile name "$firstName $lastName"; false if somethings goes wrong
+     *
+     * @uses exec()
+     */
+    public function setProfileName($firstName, $lastName)
+    {
+        return $this->exec('set_profile_name ' . $this->escapeStringArgument($firstName) . ' '
+            . $this->escapeStringArgument($lastName));
+    }
+
+    /**
      * Adds a user to the contact list
      *
      * @param string $phoneNumber The phone-number of the new contact, needs to be a telegram-user.
