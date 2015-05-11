@@ -10,7 +10,7 @@ php-client for [telegram-cli](https://github.com/vysheng/tg/)
 Requirements
 ------------
  - a running [telegram-cli](https://github.com/vysheng/tg/) listening on a unix-socket (`-S`) or a port (`-P`). Needs to be configured already (phone-number, etc.).
- - php >= 5.4.0
+ - php >= 5.3.0
 
 Usage
 -----
