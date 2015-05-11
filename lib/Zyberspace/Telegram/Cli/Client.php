@@ -64,6 +64,8 @@ class Client extends RawClient
      * @param array $userList List of users / contacts that shall receive the message,
      *                        gets formated with formatPeerList()
      * @param string $msg The message to send, gets escaped with escapeStringArgument()
+     *
+     * @return boolean true on success, false otherwise
      */
     public function broadcast(array $userList, $msg)
     {
