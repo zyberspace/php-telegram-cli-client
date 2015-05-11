@@ -59,6 +59,19 @@ class Client extends RawClient
     }
 
     /**
+     * Sends a text message to several users at once.
+     *
+     * @param array $userList List of users / contacts that shall receive the message,
+     *                        gets formated with formatPeerList()
+     * @param string $msg The message to send, gets escaped with escapeStringArgument()
+     */
+    public function broadcast(array $userList, $msg)
+    {
+        return $this->exec('broadcast ' . $this->formatPeerList($userList) . ' '
+            . $this->escapeStringArgument($msg));
+    }
+
+    /**
      * Adds a user to the contact list
      *
      * @param string $phoneNumber The phone-number of the new contact, needs to be a telegram-user.
