@@ -39,6 +39,20 @@ class Client extends RawClient
     }
 
     /**
+     * Sends a typing notification to $peer.
+     * Lasts a couple of seconds or till you send a message (whatever happens first).
+     *
+     * @param string $peer The peer, gets escaped with escapePeer(),
+     *                     so you can directly use the values from getContactList()
+     *
+     * @return boolean true on success, false otherwise
+     */
+    public function sendTyping($peer)
+    {
+        return $this->exec('send_typing ' . $this->escapePeer($peer));
+    }
+
+    /**
      * Sends a text message to $peer.
      *
      * @param string $peer The peer, gets escaped with escapePeer(),

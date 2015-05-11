@@ -12,4 +12,5 @@ $telegram = new \Zyberspace\Telegram\Cli\Client('unix:///tmp/tg.sck');
 $contactList = $telegram->getContactList();
 var_dump($contactList);
 
+$telegram->sendTyping($contactList[0]);exit;
 var_dump($telegram->msg($contactList[0], '"Te\'st"' . "\n" . time()));
