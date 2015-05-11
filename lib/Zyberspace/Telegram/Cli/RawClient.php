@@ -117,4 +117,16 @@ class RawClient
     {
         return implode(' ', array_map(array($this, 'escapePeer'), $peerList));
     }
+
+    /**
+     * Turns the given $fileName into an absolute file path and escapes him
+     *
+     * @param string $fileName The path to the file (can be relative or absolute)
+     *
+     * @return string The absolute path to the file
+     */
+    public function formatFileName($fileName)
+    {
+        return $this->escapeStringArgument(realpath($fileName));
+    }
 }
