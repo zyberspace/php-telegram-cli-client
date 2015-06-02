@@ -62,7 +62,11 @@ class RawClient
             if (substr($answer, 0, 7) === 'ANSWER ') {
                 $bytes = (int) substr($answer, 7);
                 if ($bytes > 0) {
-                    $string = trim(fread($this->_fp, $bytes + 1));
+                    $string = '';
+                    
+                    do {
+                        $string .= fread($this->_fp, $bytes + 1);
+                    } while (strlen($string) < $bytes - 1);
 
                     if ($string === 'SUCCESS') { //For "status_online" and "status_offline"
                         return true;
