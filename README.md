@@ -5,7 +5,6 @@ php-client for [telegram-cli](https://github.com/vysheng/tg/)
 [![Packagist](https://img.shields.io/packagist/v/zyberspace/telegram-cli-client.svg)](https://packagist.org/packages/zyberspace/telegram-cli-client)
 [![Codacy](https://www.codacy.com/project/badge/4175a9bbf88547cdbd94cf57c457068d)](https://www.codacy.com/app/zyberspace/php-telegram-cli-client)
 [![License](https://img.shields.io/github/license/zyberspace/php-telegram-cli-client.svg)](https://www.mozilla.org/MPL/2.0/)
-[![Gratipay](https://img.shields.io/gratipay/zyberspace.svg)](https://gratipay.com/zyberspace/)
 
 Requirements
 ------------
