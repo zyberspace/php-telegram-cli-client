@@ -62,11 +62,15 @@ class RawClient
             if (substr($answer, 0, 7) === 'ANSWER ') {
                 $bytes = (int) substr($answer, 7);
                 if ($bytes > 0) {
+                    $bytesRead = 0;
                     $string = '';
-                    
+
+                    //Run fread() till we have all the bytes we want
+                    //(as fread() can only read a maximum of 8192 bytes from a read-buffered stream at once)
                     do {
-                        $string .= fread($this->_fp, $bytes + 1);
-                    } while (strlen($string) < $bytes - 1);
+                        $string .= fread($this->_fp, $bytes - $bytesRead);
+                        $bytesRead = strlen($string);
+                    } while ($bytesRead < $bytes - 1); //-1 because we don't need the "\n" at the end of the answer
 
                     if ($string === 'SUCCESS') { //For "status_online" and "status_offline"
                         return true;
