@@ -60,7 +60,7 @@ class RawClient
         $answer = fgets($this->_fp); //"ANSWER $bytes" if there is a return value or \n if not
         if (is_string($answer)) {
             if (substr($answer, 0, 7) === 'ANSWER ') {
-                $bytes = (int) substr($answer, 7);
+                $bytes = ((int) substr($answer, 7)) - 1; //-1 because we don't need the "\n" at the end of the answer
                 if ($bytes > 0) {
                     $bytesRead = 0;
                     $string = '';
@@ -70,7 +70,7 @@ class RawClient
                     do {
                         $string .= fread($this->_fp, $bytes - $bytesRead);
                         $bytesRead = strlen($string);
-                    } while ($bytesRead < $bytes - 1); //-1 because we don't need the "\n" at the end of the answer
+                    } while ($bytesRead < $bytes);
 
                     if ($string === 'SUCCESS') { //For "status_online" and "status_offline"
                         return true;
