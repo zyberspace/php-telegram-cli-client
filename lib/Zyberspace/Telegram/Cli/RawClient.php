@@ -22,6 +22,20 @@ class RawClient
     protected $_fp;
 
     /**
+     * If telegram-cli returns an error, the error-message gets stored here.
+     *
+     * @var string
+     */
+    protected $_errorMessage = null;
+
+    /**
+     * If telegram-cli returns an error, the error-code gets stored here.
+     *
+     * @var int
+     */
+    protected $_errorCode = null;
+
+    /**
      * Connects to the telegram-cli.
      *
      * @param string $remoteSocket Address of the socket to connect to. See stream_socket_client() for more info.
@@ -51,7 +65,7 @@ class RawClient
      *
      * @param string $command The command, including all arguments
      *
-     * @return boolean|string Returns the answer as string or true on success, false if there was an error.
+     * @return object|boolean Returns the answer as a json-object or true on success, false if there was an error.
      */
     public function exec($command)
     {
@@ -60,30 +74,61 @@ class RawClient
         $answer = fgets($this->_fp); //"ANSWER $bytes" if there is a return value or \n if not
         if (is_string($answer)) {
             if (substr($answer, 0, 7) === 'ANSWER ') {
-                $bytes = ((int) substr($answer, 7)) - 1; //-1 because we don't need the "\n" at the end of the answer
+                $bytes = ((int) substr($answer, 7)) + 1; //+1 because the json-return seems to miss one byte
                 if ($bytes > 0) {
                     $bytesRead = 0;
-                    $string = '';
+                    $jsonString = '';
 
                     //Run fread() till we have all the bytes we want
                     //(as fread() can only read a maximum of 8192 bytes from a read-buffered stream at once)
                     do {
-                        $string .= fread($this->_fp, $bytes - $bytesRead);
-                        $bytesRead = strlen($string);
+                        $jsonString .= fread($this->_fp, $bytes - $bytesRead);
+                        $bytesRead = strlen($jsonString);
                     } while ($bytesRead < $bytes);
 
-                    if ($string === 'SUCCESS') { //For "status_online" and "status_offline"
-                        return true;
-                    }
+                    $json = json_decode($jsonString);
 
-                    return $string;
+                    if (!isset($json->error)) {
+                        //Reset error-message and error-code
+                        $this->_errorMessage = null;
+                        $this->_errorCode = null;
+
+                        //For "status_online" and "status_offline"
+                        if (isset($json->result) && $json->result === 'SUCCESS') {
+                            return true;
+                        }
+
+                        //Return json-object
+                        return $json;
+                    } else {
+                        $this->_errorMessage = $json->error;
+                        $this->_errorCode = $json->error_code;
+                    }
                 }
-            } else if ($answer === PHP_EOL) { //For commands like "msg"
-                return true;
             }
         }
 
         return false;
+    }
+
+    /**
+     * Returns the error-message retrieved vom telegram-cli, if there is one.
+     *
+     * @return string|null The error-message retrieved from telegram-cli or null if there was no error.
+     */
+    public function getErrorMessage()
+    {
+        return $this->_errorMessage;
+    }
+
+    /**
+     * Returns the error-code retrieved vom telegram-cli, if there is one.
+     *
+     * @return string|null The error-message retrieved from telegram-cli or null if there was no error.
+     */
+    public function getErrorCode()
+    {
+        return $this->_errorCode;
     }
 
     /**

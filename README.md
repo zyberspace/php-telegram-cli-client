@@ -8,19 +8,20 @@ php-client for [telegram-cli](https://github.com/vysheng/tg/)
 
 Requirements
 ------------
- - a running [telegram-cli](https://github.com/vysheng/tg/) listening on a unix-socket (`-S`) or a port (`-P`). Needs to be configured already (phone-number, etc.).
+ - a running [telegram-cli](https://github.com/vysheng/tg/) listening on a unix-socket (`-S`) or a port (`-P`) and returning all answers as JSON (`--json`).  
+   Needs to be configured already (phone-number, etc.).
  - php >= 5.3.0
 
 Usage
 -----
 
 ###Setup telegram-cli
-[telegram-cli](https://github.com/vysheng/tg/) needs to run on a unix-socket (`-S`) or a port (`-P`), so *telegram-cli-client* can connect to it.  
+[telegram-cli](https://github.com/vysheng/tg/) needs to run on a unix-socket (`-S`) or a port (`-P`), so *telegram-cli-client* can connect to it. All answers need to be returned as JSON (`--json`).  
 You should also start it with `-W` so the contact-list gets loaded on startup.  
 For this example we will take the following command (execute it from the dir, where you installed telegram-cli, not the php-client), `-d` lets it run as daemon.:
 
 ```shell
-./bin/telegram-cli -dWS /tmp/tg.sck &
+./bin/telegram-cli --json -dWS /tmp/tg.sck &
 ```
 
 If you never started telegram-cli before, you need to start it first in normal mode, so you can type in your telegram-phone-number and register it, if needed (`./bin/telegram-cli`).

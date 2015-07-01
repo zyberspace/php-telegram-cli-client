@@ -42,8 +42,7 @@ class Client extends RawClient
      * Sends a typing notification to $peer.
      * Lasts a couple of seconds or till you send a message (whatever happens first).
      *
-     * @param string $peer The peer, gets escaped with escapePeer(),
-     *                     so you can directly use the values from getContactList()
+     * @param string $peer The peer, gets escaped with escapePeer()
      *
      * @return boolean true on success, false otherwise
      */
@@ -55,8 +54,7 @@ class Client extends RawClient
     /**
      * Sends a text message to $peer.
      *
-     * @param string $peer The peer, gets escaped with escapePeer(),
-     *                     so you can directly use the values from getContactList()
+     * @param string $peer The peer, gets escaped with escapePeer()
      * @param string $msg The message to send, gets escaped with escapeStringArgument()
      *
      * @return boolean true on success, false otherwise
@@ -93,7 +91,7 @@ class Client extends RawClient
      * @param $firstName The first name
      * @param $lastName The last name
      *
-     * @return string|boolean The new profile name "$firstName $lastName"; false if somethings goes wrong
+     * @return object|boolean Your new user-info as an object; false if somethings goes wrong
      *
      * @uses exec()
      */
@@ -112,7 +110,7 @@ class Client extends RawClient
      * @param string $firstName The first name of the new contact
      * @param string $lastName The last name of the new contact
      *
-     * @return string|boolean The new contact "$firstName $lastName"; false if somethings goes wrong
+     * @return object|boolean The new contact-info as an object; false if somethings goes wrong
      *
      * @uses exec()
      * @uses escapeStringArgument()
@@ -131,12 +129,11 @@ class Client extends RawClient
     /**
      * Renames a user in the contact list
      *
-     * @param string $contact The contact, gets escaped with escapePeer(),
-     *                        so you can directly use the values from getContactList()
+     * @param string $contact The contact, gets escaped with escapePeer()
      * @param string $firstName The new first name for the contact
      * @param string $lastName The new last name for the contact
      *
-     * @return string|boolean The renamed contact "$firstName $lastName"; false if somethings goes wrong
+     * @return object|boolean The new contact-info as an object; false if somethings goes wrong
      *
      * @uses exec()
      * @uses escapeStringArgument()
@@ -150,8 +147,7 @@ class Client extends RawClient
     /**
      * Deletes a contact.
      *
-     * @param string $contact The contact, gets escaped with escapePeer(),
-     *                        so you can directly use the values from getContactList()
+     * @param string $contact The contact, gets escaped with escapePeer()
      *
      * @return boolean true on success, false otherwise
      *
@@ -166,8 +162,7 @@ class Client extends RawClient
     /**
      * Marks all messages with $peer as read.
      *
-     * @param string $peer The peer, gets escaped with escapePeer(),
-     *                     so you can directly use the values from getContactList()
+     * @param string $peer The peer, gets escaped with escapePeer()
      *
      * @return boolean true on success, false otherwise
      *
@@ -180,25 +175,25 @@ class Client extends RawClient
     }
 
     /**
-     * Returns an array of all contacts in form of "[firstName] [lastName]".
+     * Returns an array of all contacts. Every contact is an object like it gets returned from `getUserInfo()`.
      *
-     * @return array|boolean An array with your contacts; false if somethings goes wrong
+     * @return array|boolean An array with your contacts as objects; false if somethings goes wrong
      *
      * @uses exec()
+     *
+     * @see getUserInfo()
      */
     public function getContactList()
     {
-        return explode(PHP_EOL, $this->exec('contact_list'));
+        return $this->exec('contact_list');
     }
 
     /**
-     * Executes the user_info-command and returns it answer (the answer is unformated right now).
-     * Will get better formated in the future.
+     * Returns the informations about the user as an object.
      *
-     * @param string $user The user, gets escaped with escapePeer(),
-     *                     so you can directly use the values from getContactList()
+     * @param string $user The user, gets escaped with escapePeer()
      *
-     * @return string|boolean The answer of the user_info-command; false if somethings goes wrong
+     * @return object|boolean An object with informations about the user; false if somethings goes wrong
      *
      * @uses exec()
      * @uses escapePeer()
@@ -209,34 +204,33 @@ class Client extends RawClient
     }
 
     /**
-     * Returns an array of all your dialogs in form of
-     * "User [firstName] [lastName]: [number of unread messages] unread". Will get better formated in the future.
+     * Returns an array of all your dialogs. Every dialog is an object with type "user" or "chat".
      *
      * @return array|boolean An array with your dialogs; false if somethings goes wrong
      *
      * @uses exec()
+     *
+     * @see getUserInfo()
      */
     public function getDialogList()
     {
-        return explode(PHP_EOL, $this->exec('dialog_list'));
+        return $this->exec('dialog_list');
     }
 
     /**
-     * Executes the history-command and returns it answer (the answer is unformated right now).
-     * Will get better formated in the future.
+     * Returns an array of your past message with that $peer. Every message is an object which provides informations
+     * about it's type, sender, retriever and so one.
+     * All messages will also be marked as read.
      *
-     * @param string $peer The peer, gets escaped with escapePeer(),
-     *                     so you can directly use the values from getContactList()
+     * @param string $peer The peer, gets escaped with escapePeer()
      * @param int $limit (optional) Limit answer to $limit messages. If not set, there is no limit.
      * @param int $offset (optional) Use this with the $limit parameter to go through older messages.
      *                    Can also be negative.
      *
-     * @return string|boolean The answer of the history-command; false if somethings goes wrong
+     * @return array|boolean An array with your past messages with that $peer; false if somethings goes wrong
      *
      * @uses exec()
      * @uses escapePeer()
-     *
-     * @see https://core.telegram.org/method/messages.getHistory
      */
     public function getHistory($peer, $limit = null, $offset = null)
     {
