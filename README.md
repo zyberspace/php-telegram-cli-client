@@ -24,7 +24,8 @@ For this example we will take the following command (execute it from the dir, wh
 ./bin/telegram-cli --json -dWS /tmp/tg.sck &
 ```
 
-If you run the telegram-cli under another user than your php-script and you are using linux, you need to change the rights of the socket so that the php-script can access it. For example, add both to a `telegram`-group and then do
+If you run the telegram-cli under another user than your php-script and you are using linux, you need to change the rights of the socket so that the php-script can access it (thanks to @dennydai for this!).  
+For example, add both to a `telegram`-group and then do
 
 ```shell
 chown :telegram /tmp/tg.sck
