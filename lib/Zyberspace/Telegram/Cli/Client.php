@@ -159,6 +159,37 @@ class Client extends RawClient
         return $this->exec('del_contact ' . $this->escapePeer($contact));
     }
 
+
+    /**
+     * Blocks a user .
+     *
+     * @param string $user The user, gets escaped with escapePeer()
+     *
+     * @return boolean true on success, false otherwise
+     *
+     * @uses exec()
+     * @uses escapePeer()
+     */
+    public function blockUser($user)
+    {
+        return $this->exec('block_user ' . $this->escapePeer($user));
+    }
+
+    /**
+     * Unblocks a user.
+     *
+     * @param string $user The user, gets escaped with escapePeer()
+     *
+     * @return boolean true on success, false otherwise
+     *
+     * @uses exec()
+     * @uses escapePeer()
+     */
+    public function unblockUser($user)
+    {
+        return $this->exec('unblock_user ' . $this->escapePeer($user));
+    }
+
     /**
      * Marks all messages with $peer as read.
      *
