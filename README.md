@@ -24,6 +24,13 @@ For this example we will take the following command (execute it from the dir, wh
 ./bin/telegram-cli --json -dWS /tmp/tg.sck &
 ```
 
+If you run the telegram-cli under another user than your php-script and you are using linux, you need to change the rights of the socket so that the php-script can access it. For example, add both to a `telegram`-group and then do
+
+```shell
+chown :telegram /tmp/tg.sck
+chmod g+rwx /tmp/tg.sck
+```
+
 If you never started telegram-cli before, you need to start it first in normal mode, so you can type in your telegram-phone-number and register it, if needed (`./bin/telegram-cli`).
 
 To stop the daemon use `killall telegram-cli` or `kill -TERM [telegram-pid]`.
@@ -32,10 +39,11 @@ To stop the daemon use `killall telegram-cli` or `kill -TERM [telegram-pid]`.
 In your project-root:
 
 ```shell
-composer require zyberspace/telegram-cli-client
+composer require --update-no-dev zyberspace/telegram-cli-client
 ```
 
-Composer will then automatically add the package to your project requirements and install it (also creates the `composer.json` if you don't have one already).
+Composer will then automatically add the package to your project requirements and install it (also creates the `composer.json` if you don't have one already).  
+If you want to use the discovery-shell, remove the `--update-no-dev` from the command.
 
 ###Use it
 
@@ -44,7 +52,25 @@ require('vendor/autoload.php');
 $telegram = new \Zyberspace\Telegram\Cli\Client('unix:///tmp/tg.sck');
 
 $contactList = $telegram->getContactList();
-$telegram->msg($contactList[0], 'Hey man, what\'s up? :D');
+$telegram->msg($contactList[0]->print_name, 'Hey man, what\'s up? :D');
+```
+
+###Use it with the discovery-shell
+A really easy way to learn the api is by using the embedded [discover-shell](https://github.com/zyberspace/php-discovery-shell). You need to install the dev-dependencies for this (`composer update --dev`).
+
+```shell
+$ ./discovery-shell.php
+-- discovery-shell to help discover a class or library --
+
+Use TAB for autocompletion and your arrow-keys to navigate through your method-history.
+Beware! This is not a full-featured php-shell. The input gets parsed with PHP-Parser to avoid the usage of
+eval().
+> $telegram->getContactList();
+array(13) {
+  [...]
+}
+> $telegram->msg('my_contact', 'Hi, i am sending this from a php-client for telegram-cli.');
+true
 ```
 
 Documentation
