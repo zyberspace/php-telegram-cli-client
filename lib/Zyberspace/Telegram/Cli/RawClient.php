@@ -49,7 +49,6 @@ class RawClient
         if ($this->_fp === false) {
             throw new ClientException('Could not connect to socket "' . $remoteSocket . '"');
         }
-        stream_set_timeout($this->_fp, 1); //This way fgets() returns false if telegram-cli gives us no response.
     }
 
     /**
