@@ -62,12 +62,14 @@ class RawClient
     /**
      * Executes a command on the telegram-cli. Line-breaks will be escaped, as telgram-cli does not support them.
      *
-     * @param string $command The command, including all arguments
+     * @param string $command The command. Command-arguments can be passed as additional method-arguments.
      *
      * @return object|boolean Returns the answer as a json-object or true on success, false if there was an error.
      */
     public function exec($command)
     {
+        $command = implode(' ', func_get_args());
+
         fwrite($this->_fp, str_replace("\n", '\n', $command) . PHP_EOL);
 
         $answer = fgets($this->_fp); //"ANSWER $bytes" if there is a return value or \n if not
