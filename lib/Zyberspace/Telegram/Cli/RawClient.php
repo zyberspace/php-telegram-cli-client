@@ -72,7 +72,7 @@ class RawClient
 
         fwrite($this->_fp, str_replace("\n", '\n', $command) . PHP_EOL);
 
-        $answer = fgets($this->_fp); //"ANSWER $bytes" if there is a return value or \n if not
+        $answer = fgets($this->_fp); //"ANSWER $bytes" or false if an error occurred
         if (is_string($answer)) {
             if (substr($answer, 0, 7) === 'ANSWER ') {
                 $bytes = ((int) substr($answer, 7)) + 1; //+1 because the json-return seems to miss one byte
