@@ -86,6 +86,96 @@ class Client extends RawClient
     }
 
     /**
+     * Creates a new group chat with the users in $userList.
+     *
+     * @param string $chatTitle The title of the new chat
+     * @param array $userList The users you want to add to the chat. Gets formatted with formatPeerList().
+     *                        The current telgram-user (who creates the chat) will be added automatically.
+     *
+     * @return boolean true on success, false otherwise
+     *
+     * @uses exec()
+     * @uses escapeStringArgument()
+     * @uses formatPeerList()
+     */
+    public function createGroupChat($chatTitle, $userList)
+    {
+        if (count($userList) <= 0) {
+            return false;
+        }
+
+        return $this->exec('create_group_chat', $this->escapeStringArgument($chatTitle),
+            $this->formatPeerList($userList));
+    }
+
+    /**
+     * Returns an info-object about a chat (title, name, members, admin, etc.).
+     *
+     * @param string $chat The name of the chat (not the title). Gets escaped with escapePeer().
+     *
+     * @return object|boolean A chat-object; false if somethings goes wrong
+     *
+     * @uses exec()
+     * @uses escapePeer()
+     */
+    public function chatInfo($chat)
+    {
+        return $this->exec('chat_info', $this->escapePeer($chat));
+    }
+
+    /**
+     * Renames a chat. Both, the chat title and the print-name will change.
+     *
+     * @param string $chat The name of the chat (not the title). Gets escaped with escapePeer().
+     * @param string $chatTitle The new title of the chat.
+     *
+     * @return boolean true on success, false otherwise
+     *
+     * @uses exec()
+     * @uses escapePeer()
+     * @uses escapeStringArgument()
+     */
+    public function renameChat($chat, $newChatTitle)
+    {
+        return $this->exec('rename_chat', $this->escapePeer($chat), $this->escapeStringArgument($newChatTitle));
+    }
+
+    /**
+     * Adds a user to a chat.
+     *
+     * @param string $chat The chat you want the user to add to. Gets escaped with escapePeer().
+     * @param string $user The user you want to add. Gets escaped with escapePeer().
+     * @param int $numberOfMessagesToFoward The number of last messages of the chat, the new user should see.
+     *                                      Default is 100.
+     *
+     * @return boolean true on success, false otherwise
+     *
+     * @uses exec()
+     * @uses escapePeer()
+     */
+    public function chatAddUser($chat, $user, $numberOfMessagesToFoward = 100)
+    {
+        return $this->exec('chat_add_user', $this->escapePeer($chat), $this->escapePeer($user),
+            (int) $numberOfMessagesToFoward);
+    }
+
+    /**
+     * Deletes a user from a chat.
+     *
+     * @param string $chat The chat you want the user to delete from. Gets escaped with escapePeer().
+     * @param string $user The user you want to delete. Gets escaped with escapePeer().
+     *
+     * @return boolean true on success, false otherwise
+     *
+     * @uses exec()
+     * @uses escapePeer()
+     */
+    public function chatDeleteUser($chat, $user)
+    {
+        return $this->exec('chat_delete_user', $this->escapePeer($chat), $this->escapePeer($user));
+    }
+
+    /**
      * Sets the profile name
      *
      * @param $firstName The first name
