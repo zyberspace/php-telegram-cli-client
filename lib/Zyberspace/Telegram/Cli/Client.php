@@ -172,7 +172,7 @@ class Client extends RawClient
      */
     public function chatDeleteUser($chat, $user)
     {
-        return $this->exec('chat_delete_user', $this->escapePeer($chat), $this->escapePeer($user));
+        return $this->exec('chat_del_user', $this->escapePeer($chat), $this->escapePeer($user));
     }
 
     /**
