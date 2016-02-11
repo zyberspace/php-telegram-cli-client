@@ -375,10 +375,10 @@ class Client extends RawClient
 
     /**
      * Send Picture to peer
-     * 
+     *
      * @param  string $peer  The peer, gets escaped with escapePeer()
      * @param  string $pic   Picture Path
-     * @return boolean 
+     * @return boolean
      */
     public function sendPicture($peer, $pic)
     {
@@ -390,10 +390,10 @@ class Client extends RawClient
 
     /**
      * Send File to peer
-     * 
+     *
      * @param  string $peer  The peer, gets escaped with escapePeer()
      * @param  string $pic   File Path
-     * @return boolean 
+     * @return boolean
      */
     public function sendFile($peer, $file)
     {
