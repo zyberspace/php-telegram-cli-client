@@ -374,32 +374,40 @@ class Client extends RawClient
     }
 
     /**
-     * Send Picture to peer
+     * Send picture to peer
      *
-     * @param  string $peer  The peer, gets escaped with escapePeer()
-     * @param  string $pic   Picture Path
+     * @param  string $peer The peer, gets escaped with escapePeer()
+     * @param  string $path The picture path, gets formatted with formatFileName()
      * @return boolean
+     *
+     * @uses exec()
+     * @uses escapePeer()
+     * @uses formatFileName()
      */
-    public function sendPicture($peer, $pic)
+    public function sendPicture($peer, $path)
     {
         $peer = $this->escapePeer($peer);
-        $picture = $this->formatFileName($pic);
+        $formattedPath = $this->formatFileName($path);
 
-        return $this->exec('send_photo ' . $peer . ' ' . $picture);
+        return $this->exec('send_photo ' . $peer . ' ' . $formattedPath);
     }
 
     /**
-     * Send File to peer
+     * Send file to peer
      *
-     * @param  string $peer  The peer, gets escaped with escapePeer()
-     * @param  string $pic   File Path
+     * @param  string $peer The peer, gets escaped with escapePeer()
+     * @param  string $path The file path, gets formatted with formatFileName()
      * @return boolean
+     *
+     * @uses exec()
+     * @uses escapePeer()
+     * @uses formatFileName()
      */
-    public function sendFile($peer, $file)
+    public function sendFile($peer, $path)
     {
         $peer = $this->escapePeer($peer);
-        $atFile = $this->formatFileName($file);
+        $formattedPath = $this->formatFileName($path);
 
-        return $this->exec('send_file ' . $peer . ' ' . $atFile);
+        return $this->exec('send_file ' . $peer . ' ' . $formattedPath);
     }
 }
