@@ -372,4 +372,42 @@ class Client extends RawClient
 
         return $this->exec('history ' . $this->escapePeer($peer) . $limit . $offset);
     }
+
+    /**
+     * Send picture to peer
+     *
+     * @param  string $peer The peer, gets escaped with escapePeer()
+     * @param  string $path The picture path, gets formatted with formatFileName()
+     * @return boolean
+     *
+     * @uses exec()
+     * @uses escapePeer()
+     * @uses formatFileName()
+     */
+    public function sendPicture($peer, $path)
+    {
+        $peer = $this->escapePeer($peer);
+        $formattedPath = $this->formatFileName($path);
+
+        return $this->exec('send_photo ' . $peer . ' ' . $formattedPath);
+    }
+
+    /**
+     * Send file to peer
+     *
+     * @param  string $peer The peer, gets escaped with escapePeer()
+     * @param  string $path The file path, gets formatted with formatFileName()
+     * @return boolean
+     *
+     * @uses exec()
+     * @uses escapePeer()
+     * @uses formatFileName()
+     */
+    public function sendFile($peer, $path)
+    {
+        $peer = $this->escapePeer($peer);
+        $formattedPath = $this->formatFileName($path);
+
+        return $this->exec('send_file ' . $peer . ' ' . $formattedPath);
+    }
 }
