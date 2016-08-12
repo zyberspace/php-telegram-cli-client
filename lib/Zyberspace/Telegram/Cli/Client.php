@@ -384,12 +384,12 @@ class Client extends RawClient
      * @uses escapePeer()
      * @uses formatFileName()
      */
-    public function sendPicture($peer, $path)
+    public function sendPicture($peer, $path , $caption)
     {
         $peer = $this->escapePeer($peer);
         $formattedPath = $this->formatFileName($path);
 
-        return $this->exec('send_photo ' . $peer . ' ' . $formattedPath);
+        return $this->exec('send_photo ' . $peer . ' ' . $formattedPath . ' ' . $caption);
     }
 
     /**
