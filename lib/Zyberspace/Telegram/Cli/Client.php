@@ -324,6 +324,22 @@ class Client extends RawClient
         return $this->exec('user_info ' . $this->escapePeer($user));
     }
 
+
+    /**
+     * Searching user by his public nickname and return object representing it
+     *
+     * @param string $user The user, gets escaped with escapePeer()
+     *
+     * @return object|boolean An object with informations about the user; false if somethings goes wrong
+     *
+     * @uses exec()
+     * @uses escapePeer()
+     */
+    public function resolveUsername($username)
+    {
+        return $this->exec('resolve_username ' . $this->escapePeer($username));
+    }
+
     /**
      * Returns an array of all your dialogs. Every dialog is an object with type "user" or "chat".
      *
