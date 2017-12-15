@@ -6,8 +6,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-namespace Zyberspace\Telegram\Cli;
-
+namespace sallsabil\Telegram\Cli;
 /**
  * Raw part of the php-client for telegram-cli.
  * Takes care of the socket-connection and some helper-methods.
@@ -20,21 +19,18 @@ class RawClient
      * @var ressource
      */
     protected $_fp;
-
     /**
      * If telegram-cli returns an error, the error-message gets stored here.
      *
      * @var string
      */
     protected $_errorMessage = null;
-
     /**
      * If telegram-cli returns an error, the error-code gets stored here.
      *
      * @var int
      */
     protected $_errorCode = null;
-
     /**
      * Connects to the telegram-cli.
      *
@@ -50,7 +46,6 @@ class RawClient
             throw new ClientException('Could not connect to socket "' . $remoteSocket . '"');
         }
     }
-
     /**
      * Closes the connection to the telegram-cli.
      */
@@ -58,7 +53,6 @@ class RawClient
     {
         fclose($this->_fp);
     }
-
     /**
      * Executes a command on the telegram-cli. Line-breaks will be escaped, as telgram-cli does not support them.
      *
@@ -66,12 +60,14 @@ class RawClient
      *
      * @return object|boolean Returns the answer as a json-object or true on success, false if there was an error.
      */
-    public function exec($command)
+     public function exec($command, $if_up = false)
     {
-        $command = implode(' ', func_get_args());
-
+		$commands = func_get_args();
+		unset($commands[1]);
+        $command = implode(' ', $commands);
         fwrite($this->_fp, str_replace("\n", '\n', $command) . PHP_EOL);
-
+		
+		if($if_up === false) {
         $answer = fgets($this->_fp); //"ANSWER $bytes" or false if an error occurred
         if (is_string($answer)) {
             if (substr($answer, 0, 7) === 'ANSWER ') {
@@ -79,26 +75,29 @@ class RawClient
                 if ($bytes > 0) {
                     $bytesRead = 0;
                     $jsonString = '';
-
                     //Run fread() till we have all the bytes we want
                     //(as fread() can only read a maximum of 8192 bytes from a read-buffered stream at once)
-                    do {
+                    
+					do {
                         $jsonString .= fread($this->_fp, $bytes - $bytesRead);
                         $bytesRead = strlen($jsonString);
                     } while ($bytesRead < $bytes);
-
-                    $json = json_decode($jsonString);
-
+	
+                    // json and string
+                    if($this->isJson($jsonString)){
+					$json = json_decode($jsonString);
+					}
+					elseif(is_string($jsonString)) {
+					$json = $jsonString;
+					}
                     if (!isset($json->error)) {
                         //Reset error-message and error-code
                         $this->_errorMessage = null;
                         $this->_errorCode = null;
-
                         //For "status_online" and "status_offline"
                         if (isset($json->result) && $json->result === 'SUCCESS') {
                             return true;
                         }
-
                         //Return json-object
                         return $json;
                     } else {
@@ -108,10 +107,18 @@ class RawClient
                 }
             }
         }
-
+		}
+		else {
+		return print_r(func_get_args(), true);
+		}
         return false;
     }
-
+    
+    //json_decode function
+    function isJson($string) {
+     json_decode($string);
+     return (json_last_error() == JSON_ERROR_NONE);
+    }
     /**
      * Returns the error-message retrieved vom telegram-cli, if there is one.
      *
@@ -121,7 +128,6 @@ class RawClient
     {
         return $this->_errorMessage;
     }
-
     /**
      * Returns the error-code retrieved vom telegram-cli, if there is one.
      *
@@ -131,7 +137,6 @@ class RawClient
     {
         return $this->_errorCode;
     }
-
     /**
      * Escapes strings for usage as command-argument.
      * T"es't -> "T\"es\'t"
@@ -144,7 +149,6 @@ class RawClient
     {
         return '"' . addslashes($argument) . '"';
     }
-
     /**
      * Replaces all spaces with underscores.
      *
@@ -156,7 +160,6 @@ class RawClient
     {
         return str_replace(' ', '_', $peer);
     }
-
     /**
      * Takes a list of peers and turns it into a format needed by the most commands that handle multiple peers.
      * Every single peer gets escaped by escapePeer().
@@ -171,7 +174,6 @@ class RawClient
     {
         return implode(' ', array_map(array($this, 'escapePeer'), $peerList));
     }
-
     /**
      * Turns the given $fileName into an absolute file path and escapes him
      *
